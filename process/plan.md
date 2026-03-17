@@ -2,24 +2,27 @@
 
 ## Pre-Submission (do first)
 
-### 1. Decide on Change Controller
-Choose who will be listed as the responsible party for this registration. This determines who can request future changes to the entry.
+### ~~1. Decide on Change Controller~~ ✅
+~~Choose who will be listed as the responsible party for this registration. This determines who can request future changes to the entry.~~
 
-### 2. Publish the Spec at a Stable URL
-The Designated Expert needs to review a retrievable document. Options in order of effort:
-- **GitHub repo** (push spec.md to a public repo) — minimum viable
-- **GitHub Pages** (render as HTML) — better reading experience
-- **IETF Internet-Draft** (submit via datatracker.ietf.org) — most formal, enables IETF-wide review
+**Done:** Paul Grenier &lt;pgrenier@gmail.com&gt; is set as Change Controller in §12.
 
-### 3. Fix §12 IANA Considerations
-- Replace "TBD" with the chosen Change Controller
-- Add the `Status` field with value `provisional`
-- Change "Upon standardization, this document would request..." to "This document requests..."
-- Ensure the Specification Document field points to the published URL
+### ~~2. Publish the Spec at a Stable URL~~ ✅
+**Done:** Spec is live at https://autosponge.github.io/well-known-accessibility-report/spec (GitHub Pages). Repo: https://github.com/AutoSponge/well-known-accessibility-report
 
-### 4. Initialize Git and Push
-- `git init` and commit the spec
-- Push to a public GitHub repository
+### ~~3. Fix §12 IANA Considerations~~ ✅
+~~- Replace "TBD" with the chosen Change Controller~~
+~~- Add the `Status` field with value `provisional`~~
+~~- Change "Upon standardization, this document would request..." to "This document requests..."~~
+~~- Ensure the Specification Document field points to the published URL~~
+
+**Done:** §12 has Change Controller, `Status: provisional`, correct request language, and the GitHub Pages URL.
+
+### ~~4. Initialize Git and Push~~ ✅
+~~- `git init` and commit the spec~~
+~~- Push to a public GitHub repository~~
+
+**Done:** Repo committed and pushed to `AutoSponge/well-known-accessibility-report` (`origin/main` up to date). Note: uncommitted local changes exist (scripts/, package.json, process/rfc-check.md).
 
 ## Submission
 
@@ -28,8 +31,8 @@ Go to: https://github.com/protocol-registries/well-known-uris/issues/new
 
 Include:
 - **URI Suffix:** `accessibility-reporting`
-- **Change Controller:** (from step 1)
-- **Specification Document:** (URL from step 2)
+- **Change Controller:** Paul Grenier &lt;pgrenier@gmail.com&gt;
+- **Specification Document:** https://autosponge.github.io/well-known-accessibility-report/spec
 - **Status:** `provisional`
 - **Related Information:** RFC 9116 (security.txt, design model), WCAG-EM 2.0, EARL 1.0
 
@@ -43,7 +46,7 @@ Registry: https://github.com/protocol-registries/link-relations (or via https://
 Include:
 - **Relation Name:** `accessibility-reporting`
 - **Description:** Links to an accessibility issue reporting discovery document.
-- **Reference:** (URL from step 2)
+- **Reference:** https://autosponge.github.io/well-known-accessibility-report/spec
 
 ### 7. Monitor Review
 - Expert review has a 14-day window per RFC 8615
