@@ -1,0 +1,10 @@
+{
+  "name": "well-known-accessibility",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1"
+  }
+}
