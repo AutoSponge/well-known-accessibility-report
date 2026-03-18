@@ -13,6 +13,94 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
 
 ---
 
+## Table of Contents
+
+- [1.](#1-introduction) Introduction
+  - [1.1.](#11-motivating-scenarios) Motivating Scenarios
+- [2.](#2-terminology) Terminology
+- [3.](#3-the-well-known-resource) The Well-Known Resource
+  - [3.1.](#31-location) Location
+  - [3.2.](#32-media-type) Media Type
+  - [3.3.](#33-discovery) Discovery
+  - [3.4.](#34-link-based-discovery) Link-Based Discovery
+- [4.](#4-discovery-document-format) Discovery Document Format
+  - [4.1.](#41-top-level-fields) Top-Level Fields
+  - [4.2.](#42-the-reporting-object) The `reporting` Object
+    - [4.2.1.](#421-cross-origin-endpoints) Cross-Origin Endpoints
+  - [4.3.](#43-the-reportingaccepts-object) The `reporting.accepts` Object
+    - [4.3.1.](#431-the-rulevocabularies-array) The `ruleVocabularies` Array
+    - [4.3.2.](#432-the-attachments-array) The `attachments` Array
+  - [4.4.](#44-the-contact-object) The `contact` Object
+  - [4.5.](#45-example-discovery-documents) Example Discovery Documents
+  - [4.6.](#46-extensibility-and-version-handling) Extensibility and Version Handling
+- [5.](#5-reporting-api) Reporting API
+  - [5.1.](#51-submitting-a-report-post--required) Submitting a Report (POST) — REQUIRED
+    - [5.1.1.](#511-report-receipt) Report Receipt
+    - [5.1.2.](#512-error-responses) Error Responses
+  - [5.2.](#52-endpoint-discovery-and-status-get--optional) Endpoint Discovery and Status (GET) — OPTIONAL
+    - [5.2.1.](#521-unauthenticated-get) Unauthenticated GET
+    - [5.2.2.](#522-authenticated-get) Authenticated GET
+  - [5.3.](#53-amending-a-report-put--optional) Amending a Report (PUT) — OPTIONAL
+  - [5.4.](#54-retracting-a-report-delete--optional) Retracting a Report (DELETE) — OPTIONAL
+- [6.](#6-report-schema) Report Schema
+  - [6.1.](#61-top-level-report-fields) Top-Level Report Fields
+    - [6.1.1.](#611-the-context-object) The `@context` Object
+  - [6.2.](#62-the-reporter-object) The `reporter` Object
+    - [6.2.1.](#621-the-reportercontact-object) The `reporter.contact` Object
+  - [6.3.](#63-issue-object) Issue Object
+    - [6.3.1.](#631-the-element-object) The `element` Object
+    - [6.3.2.](#632-the-rules-array) The `rules` Array
+    - [6.3.3.](#633-earl-assertions-as-attachments) EARL Assertions as Attachments
+  - [6.4.](#64-attachments) Attachments
+    - [6.4.1.](#641-large-attachments) Large Attachments
+    - [6.4.2.](#642-browser-automation-recordings) Browser Automation Recordings
+  - [6.5.](#65-example-report) Example Report
+- [7.](#7-server-behavior) Server Behavior
+  - [7.1.](#71-rate-limiting) Rate Limiting
+  - [7.2.](#72-duplicate-and-retry-detection) Duplicate and Retry Detection
+  - [7.3.](#73-report-rejection) Report Rejection
+  - [7.4.](#74-authentication) Authentication
+  - [7.5.](#75-cross-origin-requests) Cross-Origin Requests
+  - [7.6.](#76-caching) Caching
+- [8.](#8-client-behavior) Client Behavior
+  - [8.1.](#81-automated-agents) Automated Agents
+  - [8.2.](#82-human-reporters) Human Reporters
+  - [8.3.](#83-locale-handling) Locale Handling
+  - [8.4.](#84-user-agent-native-reporting) User Agent Native Reporting
+    - [8.4.1.](#841-form-generation) Form Generation
+    - [8.4.2.](#842-accessibility-of-the-form) Accessibility of the Form
+    - [8.4.3.](#843-submission-behavior) Submission Behavior
+- [9.](#9-relationship-to-existing-specifications) Relationship to Existing Specifications
+  - [9.1.](#91-rfc-9116-securitytxt) RFC 9116 (security.txt)
+  - [9.2.](#92-wcag-em-20) WCAG-EM 2.0
+  - [9.3.](#93-earl-10) EARL 1.0
+  - [9.4.](#94-act-rules-format-11) ACT Rules Format 1.1
+  - [9.5.](#95-browser-native-tool-registration-informative) Browser-Native Tool Registration (Informative)
+  - [9.6.](#96-accessibility-tree-snapshot-tools) Accessibility Tree Snapshot Tools
+  - [9.7.](#97-scope-beyond-wcag) Scope Beyond WCAG
+- [10.](#10-privacy-considerations) Privacy Considerations
+- [11.](#11-security-considerations) Security Considerations
+  - [11.1.](#111-transport-security) Transport Security
+  - [11.2.](#112-text-field-sanitization) Text Field Sanitization
+  - [11.3.](#113-url-referenced-attachments) URL-Referenced Attachments
+  - [11.4.](#114-executable-attachments) Executable Attachments
+  - [11.5.](#115-discovery-document-integrity) Discovery Document Integrity
+  - [11.6.](#116-reporter-contact-data) Reporter Contact Data
+  - [11.7.](#117-rate-limiting-and-abuse-prevention) Rate Limiting and Abuse Prevention
+- [12.](#12-iana-considerations) IANA Considerations
+- [Appendix A.](#appendix-a-minimal-conforming-discovery-documents) Minimal Conforming Discovery Documents
+- [Appendix B.](#appendix-b-minimal-conforming-report) Minimal Conforming Report
+- [Appendix C.](#appendix-c-open-questions-and-resolutions) Open Questions and Resolutions
+- [Appendix D.](#appendix-d-discovery-document-json-schema) Discovery Document JSON Schema
+- [Appendix E.](#appendix-e-report-json-schema) Report JSON Schema
+- [Appendix F.](#appendix-f-endpoint-descriptor-json-schema) Endpoint Descriptor JSON Schema
+- [Appendix G.](#appendix-g-report-status-object-json-schema) Report Status Object JSON Schema
+- [Appendix H.](#appendix-h-authenticated-get-response-json-schema) Authenticated GET Response JSON Schema
+- [Appendix I.](#appendix-i-report-receipt-json-schema) Report Receipt JSON Schema
+- [Appendix J.](#appendix-j-error-response-json-schema) Error Response JSON Schema
+
+---
+
 ## 1. Introduction
 
 Accessibility issues on websites are often discovered by users relying on assistive technologies, by automated testing tools, or by AI agents acting on behalf of users. No standard mechanism exists for reporting these issues to site operators in a structured, machine-readable format.
@@ -31,8 +119,8 @@ This specification follows the `security.txt` (RFC 9116) model for vulnerability
 - An AI agent browsing a site on behalf of a user notices that a button is missing an accessible name in the accessibility tree. The agent drafts a report; the user reviews and approves it before submission.
 - An automated accessibility scanner runs a nightly audit and submits each EARL-formatted finding as an individual POST to the site's reporting endpoint, respecting any declared rate limits.
 - A human user encounters a form that their screen reader cannot complete. They submit a report through the site's own reporting form, which uses this endpoint under the hood.
-- A site implements WebMCP (see §9.5), registering an accessibility reporting tool in the browser context. A user's AI agent discovers this tool alongside other site-provided tools during normal interaction. When the user encounters difficulty (for example, being unable to locate or operate a control), the agent surfaces a "report accessibility issue" option. The user reviews and approves the report, which the agent submits via the WebMCP-registered tool. The tool routes the report to the site's well-known endpoint with the user's session context intact. The reporter type is `"human-assisted"`.
-- An autonomous agent uses a headless browser with accessibility tree snapshot support (see §9.6) to inspect a page programmatically. The snapshot returns a structured representation of the accessibility tree with stable element references. The agent detects that a custom widget has the ARIA `role="button"` but exposes no accessible name through any naming technique. Without human involvement, the agent fetches the discovery document, constructs a report including the relevant portion of the accessibility tree as a `domSnapshot` attachment, and submits it via POST. The reporter type is `"automated"`.
+- A site implements WebMCP (see [§9.5](#95-browser-native-tool-registration-informative)), registering an accessibility reporting tool in the browser context. A user's AI agent discovers this tool alongside other site-provided tools during normal interaction. When the user encounters difficulty (for example, being unable to locate or operate a control), the agent surfaces a "report accessibility issue" option. The user reviews and approves the report, which the agent submits via the WebMCP-registered tool. The tool routes the report to the site's well-known endpoint with the user's session context intact. The reporter type is `"human-assisted"`.
+- An autonomous agent uses a headless browser with accessibility tree snapshot support (see [§9.6](#96-accessibility-tree-snapshot-tools)) to inspect a page programmatically. The snapshot returns a structured representation of the accessibility tree with stable element references. The agent detects that a custom widget has the ARIA `role="button"` but exposes no accessible name through any naming technique. Without human involvement, the agent fetches the discovery document, constructs a report including the relevant portion of the accessibility tree as a `domSnapshot` attachment, and submits it via POST. The reporter type is `"automated"`.
 - A QA engineer uses Chrome DevTools Recorder to capture the steps that trigger an accessibility barrier: navigating to a checkout page, tabbing through the form, and failing to activate a button via keyboard. The engineer exports the recording as a JSON file and attaches it to their report as an `"other"` attachment. The operator's accessibility team replays the recording in a sandboxed browser to reproduce the issue, identifies the root cause, applies a fix, and replays the recording again to verify the barrier is resolved.
 
 ---
@@ -97,7 +185,7 @@ Link: </.well-known/accessibility-reporting>; rel="accessibility-reporting"
 <link rel="accessibility-reporting" href="/.well-known/accessibility-reporting">
 ```
 
-In both cases, the `href` value MUST resolve to a valid discovery document. It MAY be a relative or absolute URI, and MAY point to a different origin (see §4.2.1).
+In both cases, the `href` value MUST resolve to a valid discovery document. It MAY be a relative or absolute URI, and MAY point to a different origin (see [§4.2.1](#421-cross-origin-endpoints)).
 
 Reporters encountering the `accessibility-reporting` link relation SHOULD fetch the referenced URI and treat it as the discovery document. If a reporter discovers both a link relation and a well-known URI, the link relation takes precedence, as it may point to a more specific or up-to-date resource.
 
@@ -125,13 +213,13 @@ If present, the `reporting` object describes the operator's HTTP reporting endpo
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `endpoint` | string (URI) | REQUIRED | The absolute URI to which reports are submitted. MUST use HTTPS. MAY be on a different origin than the site serving the discovery document (see §4.2.1). |
+| `endpoint` | string (URI) | REQUIRED | The absolute URI to which reports are submitted. MUST use HTTPS. MAY be on a different origin than the site serving the discovery document (see [§4.2.1](#421-cross-origin-endpoints)). |
 | `methods` | array of strings | OPTIONAL | HTTP methods supported by the endpoint. MUST include `"POST"`. Valid values: `"POST"`, `"GET"`, `"PUT"`, `"DELETE"`. Defaults to `["POST"]`. |
-| `accepts` | object | OPTIONAL | Declares what report content the operator is prepared to receive. See §4.3. |
+| `accepts` | object | OPTIONAL | Declares what report content the operator is prepared to receive. See [§4.3](#43-the-reportingaccepts-object). |
 | `preferredLocales` | array of strings | OPTIONAL | BCP 47 language tags indicating the operator's preferred language(s) for report content. Reporters SHOULD use one of these languages when able. If absent, no preference is stated. |
 | `authentication` | string | OPTIONAL | One of `"none"`, `"optional"`, `"required"`. Indicates whether authentication is needed to submit a report. The mechanism is not specified here; operators SHOULD document it via `authDocumentation` or the `WWW-Authenticate` response header (RFC 9110 §11.6.1). Defaults to `"none"`. |
 | `authDocumentation` | string (URI) | OPTIONAL | URI of a human- and machine-readable document that describes how reporters obtain credentials and authenticate with the endpoint. Operators SHOULD provide this field when `authentication` is not `"none"`. |
-| `rateLimit` | boolean | OPTIONAL | Advisory. If `true`, the operator advertises that it may reject or throttle reports that exceed an unspecified rate. If `false` (the default), the operator makes no such advertisement — but MAY still impose rate limits (see §7.1). Reporters SHOULD always handle HTTP 429 regardless of this field's value. |
+| `rateLimit` | boolean | OPTIONAL | Advisory. If `true`, the operator advertises that it may reject or throttle reports that exceed an unspecified rate. If `false` (the default), the operator makes no such advertisement — but MAY still impose rate limits (see [§7.1](#71-rate-limiting)). Reporters SHOULD always handle HTTP 429 regardless of this field's value. |
 | `responseTime` | string | OPTIONAL | Advisory. The operator's expected time to acknowledge or act on a submitted report (e.g., `"5 business days"`, `"48 hours"`). This is not a binding SLA; operators SHOULD treat it as a public commitment. Relevant to regulatory frameworks that require decisions on complaints within a reasonable time (e.g., EAA Recital 95). |
 
 #### 4.2.1 Cross-Origin Endpoints
@@ -149,7 +237,7 @@ For example, `shop.example.com` might serve a discovery document whose endpoint 
 }
 ```
 
-When the endpoint is on a different origin, the endpoint server MUST serve appropriate CORS headers (see §7.5) to allow cross-origin submissions from browser-based reporters. Reporters MUST NOT reject an endpoint solely because it differs from the discovery document's origin.
+When the endpoint is on a different origin, the endpoint server MUST serve appropriate CORS headers (see [§7.5](#75-cross-origin-requests)) to allow cross-origin submissions from browser-based reporters. Reporters MUST NOT reject an endpoint solely because it differs from the discovery document's origin.
 
 ### 4.3 The `reporting.accepts` Object
 
@@ -157,10 +245,10 @@ All fields are OPTIONAL. If the `accepts` object is absent, the operator's capab
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `ruleVocabularies` | array of objects | OPTIONAL | Rule vocabularies the operator recognizes for issue classification, for use in the `rules` field of Issue Objects. See §4.3.1. |
-| `attachments` | array of objects | OPTIONAL | Attachment types the operator accepts, with per-type configuration. See §4.3.2. |
+| `ruleVocabularies` | array of objects | OPTIONAL | Rule vocabularies the operator recognizes for issue classification, for use in the `rules` field of Issue Objects. See [§4.3.1](#431-the-rulevocabularies-array). |
+| `attachments` | array of objects | OPTIONAL | Attachment types the operator accepts, with per-type configuration. See [§4.3.2](#432-the-attachments-array). |
 | `maxPayloadKB` | integer | OPTIONAL | Maximum accepted HTTP request body size in kilobytes. This applies to the total JSON body as transmitted, including inline `json` and base64-encoded `data` attachments. Reporters using `data` SHOULD account for the ~33% size inflation of base64 encoding when estimating whether attachments will fit. If absent, no limit is stated. |
-| `reporterContact` | boolean | OPTIONAL | Whether the operator accepts reporter contact information for follow-up. If `true`, the reporter MAY include a `contact` object in the `reporter` field (§6.2.1). If `false` or absent, reporters SHOULD NOT include contact information, and operators MAY discard it. See §10 and §11.6 for privacy considerations. Defaults to `false`. |
+| `reporterContact` | boolean | OPTIONAL | Whether the operator accepts reporter contact information for follow-up. If `true`, the reporter MAY include a `contact` object in the `reporter` field ([§6.2.1](#621-the-reportercontact-object)). If `false` or absent, reporters SHOULD NOT include contact information, and operators MAY discard it. See [§10](#10-privacy-considerations) and [§11.6](#116-reporter-contact-data) for privacy considerations. Defaults to `false`. |
 
 #### 4.3.1 The `ruleVocabularies` Array
 
@@ -201,7 +289,7 @@ Each element in the `ruleVocabularies` array declares a rule vocabulary (a named
 ]
 ```
 
-When a reporter encounters a `ruleVocabularies` entry, it SHOULD include the declared `prefix` and `namespace` in the report's `@context` (§6.1.1), and reference rules from that vocabulary in the `rules` field of Issue Objects (§6.3.2) using the declared prefix.
+When a reporter encounters a `ruleVocabularies` entry, it SHOULD include the declared `prefix` and `namespace` in the report's `@context` ([§6.1.1](#611-the-context-object)), and reference rules from that vocabulary in the `rules` field of Issue Objects ([§6.3.2](#632-the-rules-array)) using the declared prefix.
 
 If `ruleVocabularies` is absent or empty, the operator does not declare support for any rule vocabulary. Reporters MAY still include `rules` references using custom prefixes; operators without a declared vocabulary preference SHOULD treat these as informational.
 
@@ -216,7 +304,7 @@ Each element in the `attachments` array declares an attachment type the operator
 | `formats` | array of strings | OPTIONAL | Named sub-formats accepted for this type (e.g., `["accessibility-tree", "dom-fragment"]` for `domSnapshot`). If absent, any format is accepted. |
 | `maxSizeKB` | integer | OPTIONAL | Maximum size in kilobytes for this individual attachment. If absent, the only limit is `maxPayloadKB` on the total request body. |
 | `urlOnly` | boolean | OPTIONAL | If `true`, the operator only accepts URL references (`url` field) for this type, not inline content (`json` or `data`). Defaults to `false`. |
-| `urlPolicy` | string | OPTIONAL | One of `"open"`, `"authenticated"`. If `"authenticated"`, URL-referenced attachments of this type require reporter authentication. If absent, URL references follow the endpoint's general `authentication` policy. See §11.3. |
+| `urlPolicy` | string | OPTIONAL | One of `"open"`, `"authenticated"`. If `"authenticated"`, URL-referenced attachments of this type require reporter authentication. If absent, URL references follow the endpoint's general `authentication` policy. See [§11.3](#113-url-referenced-attachments). |
 
 **Example:**
 
@@ -247,14 +335,14 @@ Each element in the `attachments` array declares an attachment type the operator
 
 The following `domSnapshot` format values are defined by this specification:
 
-- `"accessibility-tree"`: A JSON representation of the page's accessibility tree, structured as a hierarchy of accessible objects with roles, names, states, and relationships. The exact schema is implementation-defined; common implementations follow browser accessibility APIs such as the Chrome DevTools Protocol AXNode structure (see §9.6).
+- `"accessibility-tree"`: A JSON representation of the page's accessibility tree, structured as a hierarchy of accessible objects with roles, names, states, and relationships. The exact schema is implementation-defined; common implementations follow browser accessibility APIs such as the Chrome DevTools Protocol AXNode structure (see [§9.6](#96-accessibility-tree-snapshot-tools)).
 - `"dom-fragment"`: A serialized HTML fragment containing the relevant portion of the DOM, typically rooted at or near the affected element. Transmitted as a string via the `data` field (base64-encoded) with `mimeType` set to `"text/html"`.
 
 Operators and reporters MAY use additional format values beyond those defined here. Operators that include a format string in their `domSnapshot` attachment declaration accept attachments using that format.
 
 If `attachments` is absent or empty, the operator does not declare support for any attachment type. Reporters SHOULD NOT include attachments unless the operator has declared support for the relevant type.
 
-The `"other"` type serves as a catch-all for attachment formats not separately specified, such as browser automation recordings (see §6.4.2) or EARL assertion documents (see §6.3.3). Reporters using the `"other"` type SHOULD set the `mimeType` and `description` fields on the attachment to help operators identify the content.
+The `"other"` type serves as a catch-all for attachment formats not separately specified, such as browser automation recordings (see [§6.4.2](#642-browser-automation-recordings)) or EARL assertion documents (see [§6.3.3](#633-earl-assertions-as-attachments)). Reporters using the `"other"` type SHOULD set the `mimeType` and `description` fields on the attachment to help operators identify the content.
 
 ### 4.4 The `contact` Object
 
@@ -383,15 +471,15 @@ To submit a report, the reporter sends an HTTP POST request to the endpoint decl
 **Request:**
 - Method: `POST`
 - Content-Type: `application/json`
-- Body: A Report Object (see §6)
+- Body: A Report Object (see [§6](#6-report-schema))
 
 **Response status codes:**
 
 | Code | Meaning |
 |------|---------|
-| 201 Created | Report accepted. Response body SHOULD contain a Report Receipt (§5.1.1). |
+| 201 Created | Report accepted. Response body SHOULD contain a Report Receipt ([§5.1.1](#511-report-receipt)). |
 | 400 Bad Request | Report payload is malformed or missing required fields. |
-| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header per RFC 9110 §15.5.2. The response body SHOULD be an error object (§5.1.2) with `error` set to `"unauthorized"`. |
+| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header per RFC 9110 §15.5.2. The response body SHOULD be an error object ([§5.1.2](#512-error-responses)) with `error` set to `"unauthorized"`. |
 | 403 Forbidden | Report rejected (e.g., blocked reporter, immutable field change). |
 | 409 Conflict | An equivalent report already exists. Response body SHOULD reference the existing report. |
 | 413 Payload Too Large | Report exceeds `maxPayloadKB`. |
@@ -400,15 +488,15 @@ To submit a report, the reporter sends an HTTP POST request to the endpoint decl
 
 **Redirects:** The reporting endpoint MAY return redirect responses. Operators that need to redirect POST requests MUST use 307 (Temporary Redirect) or 308 (Permanent Redirect). Using 301 or 302 for POST endpoints will silently break reporters, as most HTTP clients convert these to GET, losing the report payload.
 
-Reporters MUST follow 307 and 308 responses by reissuing the POST to the new URI. Reporters MUST NOT follow 301 or 302 redirects for POST requests. If a 301 or 302 is received in response to a POST, the reporter SHOULD treat it as an endpoint misconfiguration, surface a distinct error to the user (e.g., "the reporting endpoint appears misconfigured"), and present the operator's `contact` information (§4.4) as a fallback channel.
+Reporters MUST follow 307 and 308 responses by reissuing the POST to the new URI. Reporters MUST NOT follow 301 or 302 redirects for POST requests. If a 301 or 302 is received in response to a POST, the reporter SHOULD treat it as an endpoint misconfiguration, surface a distinct error to the user (e.g., "the reporting endpoint appears misconfigured"), and present the operator's `contact` information ([§4.4](#44-the-contact-object)) as a fallback channel.
 
-Reporters SHOULD follow no more than 5 redirects for any single request. If the limit is exceeded, the reporter SHOULD treat it as an error. See §11.1 for security considerations related to redirect loops.
+Reporters SHOULD follow no more than 5 redirects for any single request. If the limit is exceeded, the reporter SHOULD treat it as an error. See [§11.1](#111-transport-security) for security considerations related to redirect loops.
 
-**Server errors:** When the endpoint returns a 5xx status code (500, 502, 503, 504), the reporter SHOULD treat the failure as transient and MAY retry the request. Reporters SHOULD use exponential backoff, starting with a delay of at least 1 second, and SHOULD NOT retry more than 3 times. If a `Retry-After` header is present, the reporter MUST respect it. After exhausting retries, the reporter SHOULD surface the failure to the user and present the operator's `contact` information (§4.4) as a fallback channel.
+**Server errors:** When the endpoint returns a 5xx status code (500, 502, 503, 504), the reporter SHOULD treat the failure as transient and MAY retry the request. Reporters SHOULD use exponential backoff, starting with a delay of at least 1 second, and SHOULD NOT retry more than 3 times. If a `Retry-After` header is present, the reporter MUST respect it. After exhausting retries, the reporter SHOULD surface the failure to the user and present the operator's `contact` information ([§4.4](#44-the-contact-object)) as a fallback channel.
 
 #### 5.1.1 Report Receipt
 
-On success (201), the response body SHOULD be a JSON object (see Appendix I for the JSON Schema):
+On success (201), the response body SHOULD be a JSON object (see [Appendix I](#appendix-i-report-receipt-json-schema) for the JSON Schema):
 
 ```json
 {
@@ -422,7 +510,7 @@ On success (201), the response body SHOULD be a JSON object (see Appendix I for 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `id` | string | REQUIRED | Operator-assigned report identifier. |
-| `status` | string | OPTIONAL | Receipt status: one of `"received"`, `"pending-review"`. These values reflect initial processing only; once a report enters the operator's workflow, its status transitions to report lifecycle values (see §5.2.2). |
+| `status` | string | OPTIONAL | Receipt status: one of `"received"`, `"pending-review"`. These values reflect initial processing only; once a report enters the operator's workflow, its status transitions to report lifecycle values (see [§5.2.2](#522-authenticated-get)). |
 | `message` | string | OPTIONAL | Human-readable message, in a language from the operator's declared `preferredLocales`. |
 | `url` | string (URI) | CONDITIONAL | Absolute URI where the reporter may retrieve report status (if GET is supported). MUST be an absolute URI (scheme + authority + path). REQUIRED if the operator declares `"PUT"` or `"DELETE"` in `reporting.methods`; OPTIONAL otherwise. |
 
@@ -430,7 +518,7 @@ On success (201), the response body SHOULD be a JSON object (see Appendix I for 
 
 Actionable error responses help reporters resubmit successfully. A rejection that does not explain what went wrong costs the operator a valid report. Operators SHOULD design error responses that help both human reporters and automated agents understand what to change.
 
-On failure (4xx), the response body SHOULD be a JSON object with the following structure (see Appendix J for the JSON Schema):
+On failure (4xx), the response body SHOULD be a JSON object with the following structure (see [Appendix J](#appendix-j-error-response-json-schema) for the JSON Schema):
 
 ```json
 {
@@ -450,7 +538,7 @@ On failure (4xx), the response body SHOULD be a JSON object with the following s
 | `details` | array | OPTIONAL | An array of objects describing field-level errors. Each object SHOULD contain `field` (a JSON path to the problematic field) and `reason` (a human-readable explanation). Operators MAY include additional properties on detail objects for machine-readable context (e.g., `limit`, `actual`); reporters SHOULD ignore unrecognized properties. The `details` array is optional but encouraged — it helps both agents and humans understand exactly what to fix and resubmit successfully. |
 | `retryAfter` | integer | OPTIONAL | Seconds until the reporter may retry. Operators SHOULD include this for 429 responses. When present, the HTTP `Retry-After` header SHOULD carry the same value. |
 
-**413 Payload Too Large:** When rejecting a report for exceeding size limits, operators SHOULD include a `message` that explains which limit was exceeded (total payload or a specific attachment) and suggests using URL-referenced attachments as an alternative to inline content. See §6.4 for guidance on URL-referenced attachments.
+**413 Payload Too Large:** When rejecting a report for exceeding size limits, operators SHOULD include a `message` that explains which limit was exceeded (total payload or a specific attachment) and suggests using URL-referenced attachments as an alternative to inline content. See [§6.4](#64-attachments) for guidance on URL-referenced attachments.
 
 **Example 413 error response:**
 
@@ -477,7 +565,7 @@ If the operator declares `"GET"` in `reporting.methods`, reporters MAY issue a G
 
 A GET request without authentication MUST return an Endpoint Descriptor object describing the endpoint's capabilities and accepted report schema. This allows reporters — including agents encountering the endpoint for the first time — to understand what the endpoint accepts without attempting a submission.
 
-The Endpoint Descriptor is the authoritative, runtime source of truth for the endpoint's capabilities. If values in the Endpoint Descriptor differ from those in the discovery document (§4), the Endpoint Descriptor takes precedence. The discovery document is sufficient for initial discovery and simple reporters; the GET request provides the current state for reporters that need it.
+The Endpoint Descriptor is the authoritative, runtime source of truth for the endpoint's capabilities. If values in the Endpoint Descriptor differ from those in the discovery document ([§4](#4-discovery-document-format)), the Endpoint Descriptor takes precedence. The discovery document is sufficient for initial discovery and simple reporters; the GET request provides the current state for reporters that need it.
 
 Fields that appear inside the `reporting` object in the discovery document (e.g., `methods`, `accepts`, `preferredLocales`, `authentication`, `authDocumentation`) appear at the top level in the Endpoint Descriptor. The flattening is intentional: the discovery document nests these fields because it also contains the top-level `version`, `contact`, and other non-endpoint metadata, while the Endpoint Descriptor describes only the endpoint itself, so no wrapper is needed.
 
@@ -552,11 +640,11 @@ Fields that appear inside the `reporting` object in the discovery document (e.g.
 | `methods` | array of strings | OPTIONAL | HTTP methods supported. |
 | `preferredLocales` | array of strings | OPTIONAL | Operator's preferred report language(s). |
 | `authentication` | string | OPTIONAL | Authentication requirement, as declared in the discovery document. |
-| `authDocumentation` | string (URI) | OPTIONAL | Same semantics as `reporting.authDocumentation` in the discovery document (§4.2). |
-| `rateLimit` | boolean | OPTIONAL | Advisory. Same semantics as `reporting.rateLimit` in the discovery document (§4.2). |
-| `responseTime` | string | OPTIONAL | Advisory. Same semantics as `reporting.responseTime` in the discovery document (§4.2). |
-| `schema` | string (URI) | OPTIONAL | URI pointing to a machine-readable JSON Schema for the report payload. This MAY be the base schema defined in Appendix E, or an operator-specific schema that extends or constrains it (e.g., requiring additional fields, restricting `impact` values, or limiting attachment types). |
-| `mutableFields` | array of strings | OPTIONAL | Top-level report field names indicating which fields may be amended via PUT (see §5.3). If absent and PUT is supported, the set of mutable fields is unspecified and reporters SHOULD consult operator documentation. |
+| `authDocumentation` | string (URI) | OPTIONAL | Same semantics as `reporting.authDocumentation` in the discovery document ([§4.2](#42-the-reporting-object)). |
+| `rateLimit` | boolean | OPTIONAL | Advisory. Same semantics as `reporting.rateLimit` in the discovery document ([§4.2](#42-the-reporting-object)). |
+| `responseTime` | string | OPTIONAL | Advisory. Same semantics as `reporting.responseTime` in the discovery document ([§4.2](#42-the-reporting-object)). |
+| `schema` | string (URI) | OPTIONAL | URI pointing to a machine-readable JSON Schema for the report payload. This MAY be the base schema defined in [Appendix E](#appendix-e-report-json-schema), or an operator-specific schema that extends or constrains it (e.g., requiring additional fields, restricting `impact` values, or limiting attachment types). |
+| `mutableFields` | array of strings | OPTIONAL | Top-level report field names indicating which fields may be amended via PUT (see [§5.3](#53-amending-a-report-put--optional)). If absent and PUT is supported, the set of mutable fields is unspecified and reporters SHOULD consult operator documentation. |
 
 #### 5.2.2 Authenticated GET
 
@@ -598,14 +686,14 @@ This enables an AI agent to check whether a previously submitted issue has been 
 |-------|------|----------|-------------|
 | `id` | string | REQUIRED | The operator-assigned report identifier (same as the receipt `id`). |
 | `status` | string | REQUIRED | Report lifecycle status: one of `"open"`, `"in-progress"`, `"resolved"`, `"closed"`, `"duplicate"`, `"wont-fix"`. |
-| `url` | string (URI) | CONDITIONAL | Absolute URI that the reporter MAY use as the target for PUT (§5.3) or DELETE (§5.4) requests. REQUIRED when `reporting.methods` includes `"PUT"` or `"DELETE"`; OPTIONAL otherwise. |
+| `url` | string (URI) | CONDITIONAL | Absolute URI that the reporter MAY use as the target for PUT ([§5.3](#53-amending-a-report-put--optional)) or DELETE ([§5.4](#54-retracting-a-report-delete--optional)) requests. REQUIRED when `reporting.methods` includes `"PUT"` or `"DELETE"`; OPTIONAL otherwise. |
 | `created` | string (ISO 8601) | OPTIONAL | When the report was originally submitted. |
 | `updated` | string (ISO 8601) | OPTIONAL | When the report status last changed. |
 | `page` | string (URI) | OPTIONAL | The page URL from the original report. |
 | `summary` | string | OPTIONAL | A short description of the reported issue. |
 | `reason` | string | OPTIONAL | Human-readable explanation for the current status, especially when the status is `"wont-fix"` or `"closed"`. Operators MAY use this to cite regulatory defenses (e.g., disproportionate burden under EAA Article 14) or other justifications. |
 
-Report lifecycle status values are distinct from the receipt status values returned at submission time (§5.1.1); once the operator begins processing a report, its status transitions from the receipt set (`"received"`, `"pending-review"`) to the lifecycle set.
+Report lifecycle status values are distinct from the receipt status values returned at submission time ([§5.1.1](#511-report-receipt)); once the operator begins processing a report, its status transitions from the receipt set (`"received"`, `"pending-review"`) to the lifecycle set.
 
 The operator MAY wrap the response in an object that includes the Endpoint Descriptor alongside the report data. When wrapping, the operator MUST use the field name `"reports"` for the Report Status Object array. For example: `{ "endpoint": { ... }, "reports": [ ... ] }`.
 
@@ -613,7 +701,7 @@ The operator MAY wrap the response in an object that includes the Endpoint Descr
 
 1. If the top-level JSON value is an **array**, the response contains Report Status Objects only.
 2. If the top-level JSON value is an **object** with a `"reports"` key, the response is a wrapped object. The `"reports"` value is the array of Report Status Objects; other keys (e.g., `"endpoint"`) contain supplementary data such as the Endpoint Descriptor.
-3. If the top-level JSON value is an **object** without a `"reports"` key, the response is an Endpoint Descriptor (same as the unauthenticated GET response in §5.2.1). No report data is included — for example, the reporter may not have any submitted reports.
+3. If the top-level JSON value is an **object** without a `"reports"` key, the response is an Endpoint Descriptor (same as the unauthenticated GET response in [§5.2.1](#521-unauthenticated-get)). No report data is included — for example, the reporter may not have any submitted reports.
 
 Reporters MUST NOT assume the response shape in advance; it MAY vary between requests (e.g., an operator might return an Endpoint Descriptor when the reporter has no reports and a wrapped object once reports exist).
 
@@ -623,7 +711,7 @@ If the operator declares `"PUT"` in `reporting.methods`, an authenticated report
 
 PUT is only available for authenticated flows. If `"PUT"` is included in `reporting.methods`, the `authentication` field MUST NOT be `"none"`. The operator MUST reject unauthenticated PUT requests with HTTP 401. The operator SHOULD verify that the authenticated reporter is the original submitter of the report before processing the amendment.
 
-The PUT body follows the same schema as the POST body (§6) and represents a full replacement of the mutable portion of the report. Reporters MUST include all REQUIRED fields (`version`, `data`) and all mutable fields they wish to set. Immutable OPTIONAL fields (e.g., `reporter`, `page`) MAY be omitted; if included, their values MUST match the original submission — the operator MUST reject the request with 403 if any immutable field's value differs from the original. If `mutableFields` is declared (§5.2.1), only the listed fields may be changed. If `mutableFields` is not declared, the set of amendable fields is unspecified and reporters SHOULD consult operator documentation.
+The PUT body follows the same schema as the POST body ([§6](#6-report-schema)) and represents a full replacement of the mutable portion of the report. Reporters MUST include all REQUIRED fields (`version`, `data`) and all mutable fields they wish to set. Immutable OPTIONAL fields (e.g., `reporter`, `page`) MAY be omitted; if included, their values MUST match the original submission — the operator MUST reject the request with 403 if any immutable field's value differs from the original. If `mutableFields` is declared ([§5.2.1](#521-unauthenticated-get)), only the listed fields may be changed. If `mutableFields` is not declared, the set of amendable fields is unspecified and reporters SHOULD consult operator documentation.
 
 **Response status codes:**
 
@@ -631,7 +719,7 @@ The PUT body follows the same schema as the POST body (§6) and represents a ful
 |------|---------|
 | 200 OK | Report successfully amended. Response body SHOULD contain a Report Status Object with the report's current lifecycle status (e.g., `"open"`, `"in-progress"`), not a receipt status. |
 | 400 Bad Request | Report payload is malformed or missing required fields. |
-| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header (see §5.1, §7.4). |
+| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header (see [§5.1](#51-submitting-a-report-post--required), [§7.4](#74-authentication)). |
 | 403 Forbidden | The authenticated reporter is not the original submitter, or the request attempts to amend an immutable field. |
 | 404 Not Found | No report exists at the given URL. |
 | 413 Payload Too Large | Report exceeds `maxPayloadKB`. |
@@ -648,7 +736,7 @@ DELETE is only available for authenticated flows. If `"DELETE"` is included in `
 | Code | Meaning |
 |------|---------|
 | 204 No Content | Report successfully retracted. |
-| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header (see §5.1, §7.4). |
+| 401 Unauthorized | Authentication is required. The response MUST include a `WWW-Authenticate` header (see [§5.1](#51-submitting-a-report-post--required), [§7.4](#74-authentication)). |
 | 403 Forbidden | The authenticated reporter is not the original submitter, or retraction is not permitted for this report. |
 | 404 Not Found | No report exists at the given URL. |
 | 429 Too Many Requests | Rate limit exceeded. Response MAY include a `Retry-After` header. |
@@ -665,20 +753,20 @@ A report is a JSON document that uses JSON-LD conventions. All fields are OPTION
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `@context` | object or string | CONDITIONAL | JSON-LD context defining compact IRI prefixes used in the report. REQUIRED if the Issue Object contains a `rules` array; RECOMMENDED otherwise. See §6.1.1. |
+| `@context` | object or string | CONDITIONAL | JSON-LD context defining compact IRI prefixes used in the report. REQUIRED if the Issue Object contains a `rules` array; RECOMMENDED otherwise. See [§6.1.1](#611-the-context-object). |
 | `version` | string | REQUIRED | Schema version. MUST be `"1.0"`. |
 | `page` | string (URI) | RECOMMENDED | The URL of the page where the issue was observed. |
-| `reporter` | object | OPTIONAL | Information about the reporter. See §6.2. |
-| `data` | object | REQUIRED | The Issue Object. See §6.3. |
-| `attachments` | array | OPTIONAL | Attachments such as screenshots. See §6.4. |
+| `reporter` | object | OPTIONAL | Information about the reporter. See [§6.2](#62-the-reporter-object). |
+| `data` | object | REQUIRED | The Issue Object. See [§6.3](#63-issue-object). |
+| `attachments` | array | OPTIONAL | Attachments such as screenshots. See [§6.4](#64-attachments). |
 | `timestamp` | string (ISO 8601) | OPTIONAL | When the issue was observed. |
 | `locale` | string (BCP 47) | OPTIONAL | Language of the report content (descriptions, etc.). |
 
 #### 6.1.1 The `@context` Object
 
-Reports use JSON-LD compact IRIs to reference accessibility rules in the `rules` field of Issue Objects (§6.3.2), following ACT Rules Format 1.1 and EARL 1.0 conventions.
+Reports use JSON-LD compact IRIs to reference accessibility rules in the `rules` field of Issue Objects ([§6.3.2](#632-the-rules-array)), following ACT Rules Format 1.1 and EARL 1.0 conventions.
 
-When the Issue Object contains a `rules` array, reporters MUST include an `@context` that defines every prefix used in `@type` and `@id` values within those rules, plus one entry for each rule vocabulary referenced. When no `rules` are present, reporters SHOULD still include `@context` if the report uses any compact IRIs. The prefixes and namespaces SHOULD match those declared in the operator's `reporting.accepts.ruleVocabularies` (§4.3.1):
+When the Issue Object contains a `rules` array, reporters MUST include an `@context` that defines every prefix used in `@type` and `@id` values within those rules, plus one entry for each rule vocabulary referenced. When no `rules` are present, reporters SHOULD still include `@context` if the report uses any compact IRIs. The prefixes and namespaces SHOULD match those declared in the operator's `reporting.accepts.ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)):
 
 ```json
 "@context": {
@@ -712,7 +800,7 @@ Operators MUST NOT reject a report solely because it includes an `@context` fiel
 | `assistiveTechnology` | string | OPTIONAL | Name and version of any assistive technology in use (e.g., `"JAWS 2024"`, `"Dragon NaturallySpeaking 15"`). |
 | `locale` | string (BCP 47) | OPTIONAL | Reporter's locale (e.g., `"en-US"`, `"fr-FR"`). |
 | `identity` | string | OPTIONAL | Opaque identifier for the reporter (e.g., a username, email, or token). Only included when authentication is in use and the reporter consents. |
-| `contact` | object | OPTIONAL | Contact information for follow-up. Only included when the operator declares `reporterContact: true` in `accepts` (§4.3) and the reporter consents to being contacted. See §6.2.1. |
+| `contact` | object | OPTIONAL | Contact information for follow-up. Only included when the operator declares `reporterContact: true` in `accepts` ([§4.3](#43-the-reportingaccepts-object)) and the reporter consents to being contacted. See [§6.2.1](#621-the-reportercontact-object). |
 
 #### 6.2.1 The `reporter.contact` Object
 
@@ -724,7 +812,7 @@ When the operator's discovery document sets `reporting.accepts.reporterContact` 
 | `email` | string | OPTIONAL | Email address. SHOULD use `mailto:` URI format (e.g., `"mailto:jane@example.com"`). |
 | `url` | string (URI) | OPTIONAL | A URL where the reporter can be reached (e.g., a profile page or contact form). |
 
-Reporters MUST NOT include `contact` when the operator has not declared `reporterContact: true`. Operators that receive a `contact` object when `reporterContact` is not enabled SHOULD ignore it and MUST NOT store or process the contact data. See §10 and §11.6 for privacy considerations.
+Reporters MUST NOT include `contact` when the operator has not declared `reporterContact: true`. Operators that receive a `contact` object when `reporterContact` is not enabled SHOULD ignore it and MUST NOT store or process the contact data. See [§10](#10-privacy-considerations) and [§11.6](#116-reporter-contact-data) for privacy considerations.
 
 **Example:**
 
@@ -747,14 +835,14 @@ The `data` field contains a single Issue Object.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `description` | string | REQUIRED | Human-readable description of the issue. |
-| `page` | string (URI) | OPTIONAL | The URL of the page where this specific issue was observed. When present, overrides the top-level `page` field (§6.1) for this issue. If absent, the issue inherits the top-level `page` value. |
+| `page` | string (URI) | OPTIONAL | The URL of the page where this specific issue was observed. When present, overrides the top-level `page` field ([§6.1](#61-top-level-report-fields)) for this issue. If absent, the issue inherits the top-level `page` value. |
 | `impact` | string | OPTIONAL | Reporter's assessment of the severity of the barrier. This specification RECOMMENDS the following vocabulary: `"blocker"` (cannot complete the task at all), `"critical"` (severe barrier, workaround is unreasonably difficult), `"major"` (significant difficulty but a workaround exists), `"minor"` (some difficulty, low friction), `"cosmetic"` (noticeable but no functional barrier). These values are suggestions only; operators MAY document a different set of preferred values aligned with their issue tracking system, and reporters MAY use any string. |
-| `rules` | array of objects | OPTIONAL | Accessibility rules implicated, as JSON-LD typed references. Covers all vocabularies — WCAG success criteria, W3C ACT rules, axe-core best practices, and any other vocabulary declared in `reporting.accepts.ruleVocabularies` (§4.3.1). Each entry is an object with `@type` and `@id`. See §6.3.2. |
-| `element` | object | OPTIONAL | A description of the affected element. See §6.3.1. |
+| `rules` | array of objects | OPTIONAL | Accessibility rules implicated, as JSON-LD typed references. Covers all vocabularies — WCAG success criteria, W3C ACT rules, axe-core best practices, and any other vocabulary declared in `reporting.accepts.ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)). Each entry is an object with `@type` and `@id`. See [§6.3.2](#632-the-rules-array). |
+| `element` | object | OPTIONAL | A description of the affected element. See [§6.3.1](#631-the-element-object). |
 | `steps` | string | OPTIONAL | Steps to reproduce the issue. |
-| `attachments` | array of objects | OPTIONAL | Attachments specific to this issue (e.g., a screenshot showing the affected element). Each entry follows the same schema as top-level attachments (§6.4). Issue-level attachments associate evidence with the specific issue it documents. |
+| `attachments` | array of objects | OPTIONAL | Attachments specific to this issue (e.g., a screenshot showing the affected element). Each entry follows the same schema as top-level attachments ([§6.4](#64-attachments)). Issue-level attachments associate evidence with the specific issue it documents. |
 
-Top-level attachments (§6.4) apply to the report as a whole or are not specific to any single issue. Reporters MAY use both: issue-level attachments for issue-specific evidence and top-level attachments for report-wide context (e.g., a full-page screenshot or a session recording).
+Top-level attachments ([§6.4](#64-attachments)) apply to the report as a whole or are not specific to any single issue. Reporters MAY use both: issue-level attachments for issue-specific evidence and top-level attachments for report-wide context (e.g., a full-page screenshot or a session recording).
 
 #### 6.3.1 The `element` Object
 
@@ -762,8 +850,8 @@ The `element` object describes the affected element using three complementary me
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `locators` | array of objects | OPTIONAL | An ordered list of strategies for locating the element. See §6.3.1.1. |
-| `snapshot` | object | OPTIONAL | The accessibility tree state of the element at the time the issue was observed. See §6.3.1.2. |
+| `locators` | array of objects | OPTIONAL | An ordered list of strategies for locating the element. See [§6.3.1.1](#6311-the-locators-array). |
+| `snapshot` | object | OPTIONAL | The accessibility tree state of the element at the time the issue was observed. See [§6.3.1.2](#6312-the-snapshot-object). |
 | `label` | string | OPTIONAL | A human-readable description (e.g., `"Submit button in checkout form"`). |
 
 ##### 6.3.1.1 The `locators` Array
@@ -788,7 +876,7 @@ Each element in the `locators` array is a typed locator identifying the affected
 
 The array is ordered by reporter preference, with the first entry being the reporter's best or most reliable match. Reporters SHOULD prefer semantic locators (`aria`, `text`) over structural ones (`css`, `xpath`) when available, as semantic locators are more resilient to DOM changes.
 
-Reporters SHOULD provide locators that uniquely identify the element on the page. If a locator matches multiple elements, the reporter SHOULD include additional locator types or provide a distinguishing `snapshot` subtree (§6.3.1.2) with enough ancestor context to disambiguate.
+Reporters SHOULD provide locators that uniquely identify the element on the page. If a locator matches multiple elements, the reporter SHOULD include additional locator types or provide a distinguishing `snapshot` subtree ([§6.3.1.2](#6312-the-snapshot-object)) with enough ancestor context to disambiguate.
 
 ##### 6.3.1.2 The `snapshot` Object
 
@@ -849,8 +937,8 @@ Each element in the `rules` array is a typed reference with a compact IRI identi
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `@type` | string | REQUIRED | A compact IRI identifying the type of rule. Every prefix used in `@type` values MUST be defined in the report's `@context` (§6.1.1). This specification RECOMMENDS the EARL 1.0 types `"earl:TestRequirement"` and `"earl:TestCase"` (see below), but reporters MAY use other types for domain-specific vocabularies (e.g., design system guidelines). |
-| `@id` | string | REQUIRED | A compact IRI identifying the rule. The prefix MUST be defined in the report's `@context` (§6.1.1) and SHOULD match a prefix declared in the operator's `reporting.accepts.ruleVocabularies` (§4.3.1). |
+| `@type` | string | REQUIRED | A compact IRI identifying the type of rule. Every prefix used in `@type` values MUST be defined in the report's `@context` ([§6.1.1](#611-the-context-object)). This specification RECOMMENDS the EARL 1.0 types `"earl:TestRequirement"` and `"earl:TestCase"` (see below), but reporters MAY use other types for domain-specific vocabularies (e.g., design system guidelines). |
+| `@id` | string | REQUIRED | A compact IRI identifying the rule. The prefix MUST be defined in the report's `@context` ([§6.1.1](#611-the-context-object)) and SHOULD match a prefix declared in the operator's `reporting.accepts.ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)). |
 
 **RECOMMENDED `@type` values (EARL 1.0):**
 
@@ -869,7 +957,7 @@ A single issue MAY reference both a requirement and the test case(s) that detect
 ]
 ```
 
-The compact IRI `WCAG22:name-role-value` expands to `https://www.w3.org/TR/WCAG22/#name-role-value` via the `@context`. Full criterion metadata — including the success criterion number, conformance level, and human-readable title — can be resolved from the canonical W3C WCAG JSON source declared in the operator's `ruleVocabularies` `reference` field (§4.3.1).
+The compact IRI `WCAG22:name-role-value` expands to `https://www.w3.org/TR/WCAG22/#name-role-value` via the `@context`. Full criterion metadata — including the success criterion number, conformance level, and human-readable title — can be resolved from the canonical W3C WCAG JSON source declared in the operator's `ruleVocabularies` `reference` field ([§4.3.1](#431-the-rulevocabularies-array)).
 
 **Example — WCAG requirement with ACT rule evidence:**
 
@@ -935,23 +1023,23 @@ A reporter references the rule using a custom `@type`:
 
 No `earl` prefix is needed because the report does not use EARL types.
 
-Reporters SHOULD use prefixes corresponding to vocabularies declared in the operator's `reporting.accepts.ruleVocabularies` array (§4.3.1). If the operator does not declare any rule vocabularies, reporters MAY still include `rules` references using custom prefixes; operators SHOULD treat unrecognized rules as informational.
+Reporters SHOULD use prefixes corresponding to vocabularies declared in the operator's `reporting.accepts.ruleVocabularies` array ([§4.3.1](#431-the-rulevocabularies-array)). If the operator does not declare any rule vocabularies, reporters MAY still include `rules` references using custom prefixes; operators SHOULD treat unrecognized rules as informational.
 
 Reporters without knowledge of any applicable rule SHOULD omit the `rules` field entirely and rely on the `description` field to convey the issue. This is a reporting mechanism, not an audit tool — a human description of a barrier is always sufficient.
 
 #### 6.3.3 EARL Assertions as Attachments
 
-Reporters that produce complete EARL Assertion output (e.g., automated scanners with EARL toolchains) MAY include it as an attachment (§6.4) with `type` set to `"other"` and the appropriate `mimeType`:
+Reporters that produce complete EARL Assertion output (e.g., automated scanners with EARL toolchains) MAY include it as an attachment ([§6.4](#64-attachments)) with `type` set to `"other"` and the appropriate `mimeType`:
 
 - JSON-LD EARL: `"application/ld+json"`
 - Turtle: `"text/turtle"`
 - RDF/XML: `"application/rdf+xml"`
 
-This preserves full EARL fidelity — including `assertedBy`, `result.source` hierarchies, and other EARL-specific metadata — for operators with EARL processing capabilities. The `rules` field (§6.3.2) remains the primary, lightweight mechanism for rule references in the Issue Object itself.
+This preserves full EARL fidelity — including `assertedBy`, `result.source` hierarchies, and other EARL-specific metadata — for operators with EARL processing capabilities. The `rules` field ([§6.3.2](#632-the-rules-array)) remains the primary, lightweight mechanism for rule references in the Issue Object itself.
 
 ### 6.4 Attachments
 
-Reporters SHOULD prefer the `url` field over inline content for any attachment likely to approach the operator's declared size limits. URL-referenced attachments allow the operator to fetch content on demand. See §11.3 for security considerations related to URL-referenced attachments.
+Reporters SHOULD prefer the `url` field over inline content for any attachment likely to approach the operator's declared size limits. URL-referenced attachments allow the operator to fetch content on demand. See [§11.3](#113-url-referenced-attachments) for security considerations related to URL-referenced attachments.
 
 Each attachment is an object:
 
@@ -960,8 +1048,8 @@ Each attachment is an object:
 | `type` | string | REQUIRED | One of `"screenshot"`, `"domSnapshot"`, `"video"`, `"other"`. |
 | `json` | object | CONDITIONAL | Inline JSON content. Use for natively structured data such as browser automation recordings or serialized accessibility trees. Mutually exclusive with `data` and `url`. |
 | `data` | string | CONDITIONAL | Base64-encoded content. Use for binary or text content that is not JSON (e.g., images, HTML fragments, video). Mutually exclusive with `json` and `url`. |
-| `url` | string (URI) | CONDITIONAL | A URI where the attachment content can be retrieved. MUST use HTTPS. Use for large or externally hosted content. Mutually exclusive with `json` and `data`. Operators MAY require authentication for URL-referenced attachments (see `urlPolicy` in §4.3.2 and §11.3). |
-| `format` | string | OPTIONAL | Named sub-format of the attachment content. Corresponds to the `formats` values declared in the operator's attachment configuration (§4.3.2). For example, a `domSnapshot` attachment uses `"accessibility-tree"` or `"dom-fragment"` to indicate which representation it contains. Reporters SHOULD include `format` when the operator declares `formats` for the attachment type, as `mimeType` alone may not distinguish between formats that share a MIME type. |
+| `url` | string (URI) | CONDITIONAL | A URI where the attachment content can be retrieved. MUST use HTTPS. Use for large or externally hosted content. Mutually exclusive with `json` and `data`. Operators MAY require authentication for URL-referenced attachments (see `urlPolicy` in [§4.3.2](#432-the-attachments-array) and [§11.3](#113-url-referenced-attachments)). |
+| `format` | string | OPTIONAL | Named sub-format of the attachment content. Corresponds to the `formats` values declared in the operator's attachment configuration ([§4.3.2](#432-the-attachments-array)). For example, a `domSnapshot` attachment uses `"accessibility-tree"` or `"dom-fragment"` to indicate which representation it contains. Reporters SHOULD include `format` when the operator declares `formats` for the attachment type, as `mimeType` alone may not distinguish between formats that share a MIME type. |
 | `mimeType` | string | OPTIONAL | MIME type of the attached content (e.g., `"image/png"`, `"text/html"`, `"video/mp4"`, `"application/json"`). |
 | `description` | string | OPTIONAL | Human-readable description of the attachment. |
 
@@ -971,7 +1059,7 @@ An attachment MUST include exactly one of `json`, `data`, or `url`.
 - **`data`**: Best for binary content (images, video) or non-JSON text (HTML, Turtle). The content MUST be base64-encoded.
 - **`url`**: Best for large attachments or content hosted externally. Avoids payload size limits entirely.
 
-Reporters SHOULD NOT include attachments of a type the operator has not declared support for in the `attachments` array of the discovery document (§4.3.2).
+Reporters SHOULD NOT include attachments of a type the operator has not declared support for in the `attachments` array of the discovery document ([§4.3.2](#432-the-attachments-array)).
 
 #### 6.4.1 Large Attachments
 
@@ -990,7 +1078,7 @@ Some attachment types — videos, full-page screenshots, complex DOM snapshots, 
 
 Operators declaring video support in `reporting.accepts.attachments` SHOULD be prepared to receive URL-referenced attachments. Operators MAY impose their own size or duration limits on referenced content.
 
-If a report is rejected with 413 (Payload Too Large), the error response SHOULD suggest using URL references as an alternative (see §5.1.2).
+If a report is rejected with 413 (Payload Too Large), the error response SHOULD suggest using URL references as an alternative (see [§5.1.2](#512-error-responses)).
 
 #### 6.4.2 Browser Automation Recordings
 
@@ -1017,7 +1105,7 @@ Reporters attaching recordings SHOULD set `type` to `"other"`, `mimeType` to `"a
 }
 ```
 
-Recordings are executable content. See §11.4 for security considerations that apply to operators receiving and processing recordings.
+Recordings are executable content. See [§11.4](#114-executable-attachments) for security considerations that apply to operators receiving and processing recordings.
 
 ### 6.5 Example Report
 
@@ -1120,7 +1208,7 @@ Operators SHOULD detect both exact retries and semantically equivalent reports.
 
 The criteria for semantic deduplication are at the operator's discretion. Operators SHOULD document their duplicate detection policy if it may affect reporter behavior.
 
-Reporters that support GET (§5.2.2) SHOULD check the status of previously submitted reports before re-submitting an issue to the same endpoint, to avoid unnecessary 409 responses.
+Reporters that support GET ([§5.2.2](#522-authenticated-get)) SHOULD check the status of previously submitted reports before re-submitting an issue to the same endpoint, to avoid unnecessary 409 responses.
 
 ### 7.3 Report Rejection
 
@@ -1130,7 +1218,7 @@ Operators MAY reject reports for any reason (e.g., spam, abuse, unsupported page
 
 If `authentication` is `"required"`, the operator MUST reject unauthenticated POST requests with HTTP 401. Per RFC 9110 §15.5.2, any 401 response MUST include a `WWW-Authenticate` header containing at least one challenge that indicates the authentication scheme(s) the endpoint accepts (e.g., `Bearer`, `Basic`). Reporters SHOULD use the `WWW-Authenticate` challenge to determine which scheme to use. Common schemes include Bearer tokens (RFC 6750) and Basic authentication (RFC 7617); OAuth 2.0 (RFC 6749) is a common framework for issuing Bearer tokens.
 
-The specific authentication mechanism is not mandated by this specification. Operators SHOULD document how reporters obtain and present credentials. When `authentication` is not `"none"`, operators SHOULD populate the `authDocumentation` field (§4.2) with a URI pointing to such documentation. If `authDocumentation` is absent, reporters MAY fall back to the `contact.url` field or attempt the challenge advertised in `WWW-Authenticate`.
+The specific authentication mechanism is not mandated by this specification. Operators SHOULD document how reporters obtain and present credentials. When `authentication` is not `"none"`, operators SHOULD populate the `authDocumentation` field ([§4.2](#42-the-reporting-object)) with a URI pointing to such documentation. If `authDocumentation` is absent, reporters MAY fall back to the `contact.url` field or attempt the challenge advertised in `WWW-Authenticate`.
 
 ### 7.5 Cross-Origin Requests
 
@@ -1172,13 +1260,13 @@ Automated agents (including AI-based browsing tools) SHOULD:
 
 1. Fetch the discovery document before submitting a report.
 2. If GET is supported, issue an unauthenticated GET to the endpoint to retrieve current capabilities before constructing a report.
-3. Respect `accepts` declarations — do not include attachments unless the operator declares support for the relevant type in `reporting.accepts.attachments` (§4.3.2). When referencing rules in the `rules` field (§6.3.2), check the operator's `reporting.accepts.ruleVocabularies` (§4.3.1) for matching vocabularies and use the operator's declared `prefix` and `namespace` in the report's `@context`. If a vocabulary is not declared, the agent MAY still include `rules` references, but the operator may not process them.
+3. Respect `accepts` declarations — do not include attachments unless the operator declares support for the relevant type in `reporting.accepts.attachments` ([§4.3.2](#432-the-attachments-array)). When referencing rules in the `rules` field ([§6.3.2](#632-the-rules-array)), check the operator's `reporting.accepts.ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)) for matching vocabularies and use the operator's declared `prefix` and `namespace` in the report's `@context`. If a vocabulary is not declared, the agent MAY still include `rules` references, but the operator may not process them.
 4. Respect `preferredLocales` when constructing descriptions.
 5. Set `reporter.type` to `"automated"`.
 6. Store the report `id` from the receipt so that duplicate submissions can be avoided in future sessions.
 7. If GET is supported and the agent has previously submitted reports to this endpoint, check report status before re-reporting a known issue.
-8. If the agent has access to the browser's accessibility tree (e.g., via CDP or a browser automation framework), populate the `element.snapshot` field (§6.3.1.2) with the accessibility tree state of the affected element. Include enough ancestor context via `parent` to form a distinguished subtree.
-9. Prefer semantic locators (`aria`, `text`) over structural locators (`css`, `xpath`) in the `element.locators` array (§6.3.1.1).
+8. If the agent has access to the browser's accessibility tree (e.g., via CDP or a browser automation framework), populate the `element.snapshot` field ([§6.3.1.2](#6312-the-snapshot-object)) with the accessibility tree state of the affected element. Include enough ancestor context via `parent` to form a distinguished subtree.
+9. Prefer semantic locators (`aria`, `text`) over structural locators (`css`, `xpath`) in the `element.locators` array ([§6.3.1.1](#6311-the-locators-array)).
 
 ### 8.2 Human Reporters
 
@@ -1198,11 +1286,11 @@ User agents (browsers) that detect a valid discovery document at `/.well-known/a
 
 #### 8.4.1 Form Generation
 
-The user agent SHOULD generate a reporting form derived from the discovery document and the report schema defined in §6. Specifically:
+The user agent SHOULD generate a reporting form derived from the discovery document and the report schema defined in [§6](#6-report-schema). Specifically:
 
 1. The form SHOULD include fields corresponding to the REQUIRED and RECOMMENDED report fields (`page`, `data.description`), pre-populating `page` with the current URL and `version` with `"1.0"`.
-2. The form SHOULD reflect the operator's `accepts` declarations — for example, offering a screenshot attachment control only when `reporting.accepts.attachments` includes a `"screenshot"` type (§4.3.2).
-3. The form SHOULD expose the `impact` vocabulary (§6.3) as a selection control rather than requiring free text.
+2. The form SHOULD reflect the operator's `accepts` declarations — for example, offering a screenshot attachment control only when `reporting.accepts.attachments` includes a `"screenshot"` type ([§4.3.2](#432-the-attachments-array)).
+3. The form SHOULD expose the `impact` vocabulary ([§6.3](#63-issue-object)) as a selection control rather than requiring free text.
 4. The form SHOULD omit fields intended for automated reporters (`rules`, `element.locators`, `element.snapshot`) unless the user explicitly requests an advanced view.
 5. The form MUST constrain the user to a single issue per submission.
 
@@ -1217,8 +1305,8 @@ Native HTML elements carry built-in semantics, keyboard behavior, and platform a
 1. The user agent MUST set `reporter.type` to `"human"`.
 2. The user agent SHOULD auto-populate `reporter.userAgent` and `reporter.locale`.
 3. If the operator declares `authentication` as `"required"`, the user agent SHOULD inform the user before presenting the form, SHOULD link to `authDocumentation` if provided, and SHOULD surface the `contact` fallback if the user cannot authenticate.
-4. The user agent SHOULD display the receipt `id` (§5.1.1) to the user on successful submission so that they can reference it in follow-up communication.
-5. On failure, the user agent SHOULD surface the `contact` object (§4.4) as a fallback channel.
+4. The user agent SHOULD display the receipt `id` ([§5.1.1](#511-report-receipt)) to the user on successful submission so that they can reference it in follow-up communication.
+5. On failure, the user agent SHOULD surface the `contact` object ([§4.4](#44-the-contact-object)) as a fallback channel.
 
 ---
 
@@ -1234,20 +1322,20 @@ WCAG-EM (W3C Website Accessibility Conformance Evaluation Methodology) defines a
 
 ### 9.3 EARL 1.0
 
-The Evaluation and Report Language (EARL) is a W3C vocabulary for describing test results. This specification adopts EARL's JSON-LD conventions for typed references in the `rules` field of Issue Objects (§6.3.2):
+The Evaluation and Report Language (EARL) is a W3C vocabulary for describing test results. This specification adopts EARL's JSON-LD conventions for typed references in the `rules` field of Issue Objects ([§6.3.2](#632-the-rules-array)):
 
 - **`earl:TestRequirement`** is used as the `@type` for high-level requirements such as WCAG success criteria.
 - **`earl:TestCase`** is used as the `@type` for concrete test rules such as W3C ACT rules, axe-core rules, and Lighthouse audits.
 
 This alignment means that `rules` entries are valid JSON-LD that EARL-aware processors can interpret directly. Reporters without EARL tooling need only construct simple `@type`/`@id` objects.
 
-Reporters that produce complete EARL Assertion output (e.g., automated scanners) MAY include it as an attachment (§6.3.3) for operators with EARL processing capabilities.
+Reporters that produce complete EARL Assertion output (e.g., automated scanners) MAY include it as an attachment ([§6.3.3](#633-earl-assertions-as-attachments)) for operators with EARL processing capabilities.
 
 ### 9.4 ACT Rules Format 1.1
 
 The Accessibility Conformance Testing (ACT) Rules Format 1.1 defines machine-readable accessibility test rules and a JSON-LD structure for reporting test results. This specification aligns with the ACT Rules Format in two ways:
 
-1. **Compact IRI identifiers.** The `rules` field (§6.3.2) references rules using compact IRIs — the same pattern used in ACT assertion output. For example, `act:23a2a8` references an ACT rule and `WCAG22:name-role-value` references a WCAG success criterion. Both expand to canonical W3C URIs via the report's `@context` (§6.1.1).
+1. **Compact IRI identifiers.** The `rules` field ([§6.3.2](#632-the-rules-array)) references rules using compact IRIs — the same pattern used in ACT assertion output. For example, `act:23a2a8` references an ACT rule and `WCAG22:name-role-value` references a WCAG success criterion. Both expand to canonical W3C URIs via the report's `@context` ([§6.1.1](#611-the-context-object)).
 
 2. **EARL type hierarchy.** The `@type` values used in this specification — `earl:TestRequirement` for requirements and `earl:TestCase` for concrete rules — follow the EARL vocabulary hierarchy as used in ACT Rules Format 1.1 examples.
 
@@ -1271,9 +1359,9 @@ These snapshots support accessibility reporting in two ways:
 
 1. **Issue detection:** An agent analyzing an accessibility tree snapshot can identify structural problems — missing accessible names, incorrect roles, broken focus order, unlabelled form controls — that may not be visible in screenshots or HTML source.
 
-2. **Issue evidence:** A relevant portion of the accessibility tree snapshot works well as a `domSnapshot` attachment (§6.4), giving the operator a precise, reproducible picture of the element's state when the issue was observed.
+2. **Issue evidence:** A relevant portion of the accessibility tree snapshot works well as a `domSnapshot` attachment ([§6.4](#64-attachments)), giving the operator a precise, reproducible picture of the element's state when the issue was observed.
 
-Operators declaring `domSnapshot` support in `reporting.accepts.attachments` (§4.3.2) SHOULD be prepared to receive accessibility tree snapshots, not only serialized HTML DOM content. The `formats` field on a `domSnapshot` attachment declaration (e.g., `["accessibility-tree", "dom-fragment"]`) allows operators to specify which representations they accept.
+Operators declaring `domSnapshot` support in `reporting.accepts.attachments` ([§4.3.2](#432-the-attachments-array)) SHOULD be prepared to receive accessibility tree snapshots, not only serialized HTML DOM content. The `formats` field on a `domSnapshot` attachment declaration (e.g., `["accessibility-tree", "dom-fragment"]`) allows operators to specify which representations they accept.
 
 ### 9.7 Scope Beyond WCAG
 
@@ -1284,7 +1372,7 @@ This specification intentionally does not limit reports to WCAG success criteria
 - Interaction patterns that work for some users but not others
 - Issues not yet addressed by any published standard
 
-Reporters SHOULD describe the barrier they experienced, regardless of whether they can identify an applicable WCAG criterion. When the issue maps to a rule from a third-party vocabulary (e.g., an axe-core best-practice rule), reporters can use the `rules` field (§6.3.2) to reference it, and operators can declare support for that vocabulary via `ruleVocabularies` (§4.3.1).
+Reporters SHOULD describe the barrier they experienced, regardless of whether they can identify an applicable WCAG criterion. When the issue maps to a rule from a third-party vocabulary (e.g., an axe-core best-practice rule), reporters can use the `rules` field ([§6.3.2](#632-the-rules-array)) to reference it, and operators can declare support for that vocabulary via `ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)).
 
 ---
 
@@ -1306,7 +1394,7 @@ Reporters SHOULD describe the barrier they experienced, regardless of whether th
 - The endpoint declared in the discovery document MUST use HTTPS to protect report content in transit.
 - Reporters SHOULD verify the discovery document is served from the expected origin before submitting reports. Reporters SHOULD reject discovery documents served over plain HTTP (without TLS).
 - Reporters SHOULD validate that the `endpoint` URI in the discovery document uses HTTPS and SHOULD NOT submit reports to endpoints on private or internal network addresses unless explicitly configured to do so.
-- Reporters SHOULD follow no more than 5 redirects for any single request (see §5.1). Malicious or compromised discovery documents could point to endpoints that create redirect loops; redirect limits mitigate this.
+- Reporters SHOULD follow no more than 5 redirects for any single request (see [§5.1](#51-submitting-a-report-post--required)). Malicious or compromised discovery documents could point to endpoints that create redirect loops; redirect limits mitigate this.
 
 ### 11.2 Text Field Sanitization
 
@@ -1316,16 +1404,16 @@ Reporters SHOULD describe the barrier they experienced, regardless of whether th
 
 ### 11.3 URL-Referenced Attachments
 
-- Operators MUST treat attachment URLs (the `url` field in attachment objects, §6.4) as untrusted input.
+- Operators MUST treat attachment URLs (the `url` field in attachment objects, [§6.4](#64-attachments)) as untrusted input.
 - **SSRF prevention:** Operators SHOULD NOT fetch attachment URLs that resolve to private or internal network addresses (RFC 1918 ranges, link-local addresses, loopback addresses). Operators SHOULD validate URL targets before initiating any fetch.
 - Operators SHOULD validate: HTTPS scheme only, response `Content-Type` matches the declared `mimeType`, and response size is within acceptable bounds.
 - Operators SHOULD apply a timeout and a follow-redirect limit (no more than 5 redirects) when fetching attachment URLs, to prevent slow-loris or redirect-chain attacks.
 - Operators MAY choose not to fetch attachment URLs at all, instead storing the reference for manual review. This is a valid and safe approach.
-- **Authentication as a trust signal:** Operators MAY restrict URL-referenced attachments to authenticated reporters only. This is a reasonable default — unauthenticated reporters can still submit inline `data` attachments, while URL references (which carry higher risk and require operator-side fetching) are gated behind identity. Operators MAY declare this policy per attachment type using the `urlPolicy` field (§4.3.2) and SHOULD document it in the discovery document or endpoint descriptor.
+- **Authentication as a trust signal:** Operators MAY restrict URL-referenced attachments to authenticated reporters only. This is a reasonable default — unauthenticated reporters can still submit inline `data` attachments, while URL references (which carry higher risk and require operator-side fetching) are gated behind identity. Operators MAY declare this policy per attachment type using the `urlPolicy` field ([§4.3.2](#432-the-attachments-array)) and SHOULD document it in the discovery document or endpoint descriptor.
 
 ### 11.4 Executable Attachments
 
-- Browser automation recordings (§6.4.2) and other JSON-based automation scripts are executable content even though they arrive as data. When replayed via tools such as Puppeteer or Chrome DevTools, they can navigate to arbitrary URLs, submit forms, and execute custom JavaScript expressions.
+- Browser automation recordings ([§6.4.2](#642-browser-automation-recordings)) and other JSON-based automation scripts are executable content even though they arrive as data. When replayed via tools such as Puppeteer or Chrome DevTools, they can navigate to arbitrary URLs, submit forms, and execute custom JavaScript expressions.
 - Operators MUST NOT auto-execute or replay attached recordings in production environments without human review.
 - Recordings may contain navigation to arbitrary URLs, form submissions with captured credentials or session tokens, or custom steps with embedded expressions.
 - Operators SHOULD replay recordings only in sandboxed environments: isolated browser profiles with no access to internal systems, no stored credentials, and no persistent state.
@@ -1340,7 +1428,7 @@ Reporters SHOULD describe the barrier they experienced, regardless of whether th
 
 ### 11.6 Reporter Contact Data
 
-- Reporter contact information (§6.2.1) is personally identifiable information (PII). Operators that declare `reporterContact: true` SHOULD publish a privacy notice explaining how contact data is stored, used, and retained.
+- Reporter contact information ([§6.2.1](#621-the-reportercontact-object)) is personally identifiable information (PII). Operators that declare `reporterContact: true` SHOULD publish a privacy notice explaining how contact data is stored, used, and retained.
 - Operators MUST NOT use reporter contact data for purposes beyond follow-up on the submitted report (e.g., marketing, profiling, or sharing with third parties) unless the reporter has given separate, explicit consent.
 - Operators SHOULD NOT require contact information as a condition of accepting a report. The `reporterContact` flag signals willingness to receive it, not a mandate.
 - Reporters — especially automated agents acting on behalf of users — MUST obtain the user's consent before including contact information in a report. Agents SHOULD present a clear prompt explaining what data will be shared and with whom.
@@ -1349,7 +1437,7 @@ Reporters SHOULD describe the barrier they experienced, regardless of whether th
 ### 11.7 Rate Limiting and Abuse Prevention
 
 - Operators SHOULD implement rate limiting to prevent abuse of the reporting endpoint as a vector for spam or denial-of-service.
-- See §7.1 for rate limiting guidance and §7.2 for duplicate detection.
+- See [§7.1](#71-rate-limiting) for rate limiting guidance and [§7.2](#72-duplicate-and-retry-detection) for duplicate detection.
 
 ---
 
@@ -1415,19 +1503,19 @@ This document also requests registration of the following link relation type in 
 ## Appendix C: Open Questions and Resolutions
 
 1. **Should `/.well-known/accessibility-reporting` return the discovery document directly, or should it redirect to an operator-chosen URL?**
-   *Resolved.* The discovery document is served directly at the well-known URI. Operators MAY use HTTP redirects (301, 302, 307, 308) to serve it from a different location (§3.3). Link-based discovery (§3.4) provides an additional mechanism for pointing to an alternative URL.
+   *Resolved.* The discovery document is served directly at the well-known URI. Operators MAY use HTTP redirects (301, 302, 307, 308) to serve it from a different location ([§3.3](#33-discovery)). Link-based discovery ([§3.4](#34-link-based-discovery)) provides an additional mechanism for pointing to an alternative URL.
 
 2. **Should there be a standard way to express that an operator does not currently accept automated reports (human-only)?**
    *Deferred.* This is not addressed in v1.0. Operators who wish to restrict to human reporters may use authentication or server-side filtering on `reporter.type`. A future version may add an `acceptedReporterTypes` field to the discovery document.
 
 3. **Should the spec define a standard webhook/push mechanism so operators can notify reporters when an issue status changes?**
-   *Deferred.* This is out of scope for v1.0. Reporters with authentication can poll via GET (§5.2.2) to check report status. A push notification mechanism may be defined in a future version.
+   *Deferred.* This is out of scope for v1.0. Reporters with authentication can poll via GET ([§5.2.2](#522-authenticated-get)) to check report status. A push notification mechanism may be defined in a future version.
 
 4. **Should the spec address batch reporting scenarios (e.g., a weekly automated scan posting many issues at once) more explicitly?**
-   *Resolved.* Each POST contains exactly one issue. Reporters performing batch submissions (e.g., automated scanners) submit multiple POSTs and should respect rate limits (§7.1) and payload size limits (`maxPayloadKB`). Operators manage scanner traffic through rate limiting and authentication (§7.4). Further batch-specific guidance may be added in a future version.
+   *Resolved.* Each POST contains exactly one issue. Reporters performing batch submissions (e.g., automated scanners) submit multiple POSTs and should respect rate limits ([§7.1](#71-rate-limiting)) and payload size limits (`maxPayloadKB`). Operators manage scanner traffic through rate limiting and authentication ([§7.4](#74-authentication)). Further batch-specific guidance may be added in a future version.
 
 5. **Is there value in a signed discovery document (analogous to DKIM or signed `security.txt`) to prevent spoofing?**
-   *Deferred.* This is not addressed in v1.0. The security considerations (§11) recommend that operators ensure the discovery document cannot be modified by unauthorized parties. Integrity mechanisms such as signed documents may be explored in a future version.
+   *Deferred.* This is not addressed in v1.0. The security considerations ([§11](#11-security-considerations)) recommend that operators ensure the discovery document cannot be modified by unauthorized parties. Integrity mechanisms such as signed documents may be explored in a future version.
 
 ## Appendix D: Discovery Document JSON Schema
 
@@ -1918,7 +2006,7 @@ The following JSON Schema defines the structure of a report payload submitted vi
 
 ## Appendix F: Endpoint Descriptor JSON Schema
 
-The following JSON Schema defines the structure of the Endpoint Descriptor returned by an unauthenticated GET request (§5.2.1).
+The following JSON Schema defines the structure of the Endpoint Descriptor returned by an unauthenticated GET request ([§5.2.1](#521-unauthenticated-get)).
 
 ```json
 {
@@ -1988,7 +2076,7 @@ The following JSON Schema defines the structure of the Endpoint Descriptor retur
 
 ## Appendix G: Report Status Object JSON Schema
 
-The following JSON Schema defines the structure of a Report Status Object returned by an authenticated GET request (§5.2.2) or a successful PUT request (§5.3).
+The following JSON Schema defines the structure of a Report Status Object returned by an authenticated GET request ([§5.2.2](#522-authenticated-get)) or a successful PUT request ([§5.3](#53-amending-a-report-put--optional)).
 
 ```json
 {
@@ -2042,9 +2130,9 @@ The following JSON Schema defines the structure of a Report Status Object return
 
 ## Appendix H: Authenticated GET Response JSON Schema
 
-The following JSON Schema defines the structure of the response from an authenticated GET request (§5.2.2). The response is either an array of Report Status Objects or a wrapper object containing both an Endpoint Descriptor and the report data. Reporters detect the response shape by checking whether the top-level value is an array (unwrapped) or an object (wrapped, with a `"reports"` key).
+The following JSON Schema defines the structure of the response from an authenticated GET request ([§5.2.2](#522-authenticated-get)). The response is either an array of Report Status Objects or a wrapper object containing both an Endpoint Descriptor and the report data. Reporters detect the response shape by checking whether the top-level value is an array (unwrapped) or an object (wrapped, with a `"reports"` key).
 
-> **Note:** §5.2.2 defines a third response shape — an object without a `"reports"` key — which represents a plain Endpoint Descriptor with no report data. That shape is validated by the Endpoint Descriptor schema (Appendix F), not this schema. This schema covers only the two report-bearing response shapes.
+> **Note:** [§5.2.2](#522-authenticated-get) defines a third response shape — an object without a `"reports"` key — which represents a plain Endpoint Descriptor with no report data. That shape is validated by the Endpoint Descriptor schema ([Appendix F](#appendix-f-endpoint-descriptor-json-schema)), not this schema. This schema covers only the two report-bearing response shapes.
 
 ```json
 {
@@ -2126,7 +2214,7 @@ The following JSON Schema defines the structure of the response from an authenti
 
 ## Appendix I: Report Receipt JSON Schema
 
-The following JSON Schema defines the structure of the Report Receipt returned as the 201 response body after a successful POST submission (§5.1.1).
+The following JSON Schema defines the structure of the Report Receipt returned as the 201 response body after a successful POST submission ([§5.1.1](#511-report-receipt)).
 
 ```json
 {
@@ -2161,7 +2249,7 @@ The following JSON Schema defines the structure of the Report Receipt returned a
 
 ## Appendix J: Error Response JSON Schema
 
-The following JSON Schema defines the structure of error responses returned for failed submissions and other 4xx responses (§5.1.2).
+The following JSON Schema defines the structure of error responses returned for failed submissions and other 4xx responses ([§5.1.2](#512-error-responses)).
 
 ```json
 {
