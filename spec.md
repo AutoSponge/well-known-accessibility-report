@@ -8,7 +8,7 @@ permalink: /spec
 **Status:** Draft — seeking feedback <br>
 **URI Suffix:** `accessibility-reporting` <br>
 **Well-Known URI:** `/.well-known/accessibility-reporting` <br>
-**Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1
+**Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations
 
 ---
 
@@ -84,6 +84,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.6.](#96-accessibility-tree-snapshot-tools) Accessibility Tree Snapshot Tools
   - [9.7.](#97-scope-beyond-wcag) Scope Beyond WCAG
   - [9.8.](#98-multi-subdomain-deployments) Multi-Subdomain Deployments
+  - [9.9.](#99-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1424,6 +1425,23 @@ Both approaches are valid and may be combined (e.g., secondary subdomains redire
 Platforms that assign a subdomain to each tenant (e.g., `customer1.platform.com`, `customer2.platform.com`) SHOULD serve a per-tenant discovery document at each subdomain's well-known URI. A shared discovery document would cause reports to be routed to the wrong entity, defeating the purpose of per-tenant reporting. The `contact` object ([§4.4](#44-the-contact-object)) in each document SHOULD identify the specific tenant, not the platform operator, unless the platform operator is the responsible party for accessibility remediation.
 
 Platforms that cannot serve per-tenant well-known resources SHOULD consider whether link-based discovery ([§3.4](#34-link-based-discovery)) via per-page `<link>` headers is a more appropriate deployment model for their architecture.
+
+### 9.9 WAI-Adapt: Discoverable Destinations (Informative)
+
+*This section is informative. It describes a complementary W3C specification that overlaps in conceptual territory.*
+
+The [WAI-Adapt: Discoverable Destinations](https://github.com/w3c/adapt/blob/main/explainers/discoverable-destinations.md#the-discoverable-destinations-approach) explainer (W3C) defines a set of standardized `rel` attribute values for HTML `<link>` elements that allow user agents to discover common site destinations such as login, help, and accessibility statements. It is designed to help people with cognitive disabilities and automated agents navigate sites more reliably.
+
+One of the registered destinations is `rel="accessibility-statement"`, which points to the operator's human-readable accessibility conformity declaration. This is distinct from the present specification: `rel="accessibility-statement"` links to an existing document; `/.well-known/accessibility-reporting` is a machine-readable API for submitting new issue reports. The two mechanisms address different needs and are not in conflict.
+
+Operators supporting both specifications SHOULD include both `<link>` elements in their page `<head>`:
+
+```html
+<link rel="accessibility-statement" href="/accessibility/statement">
+<link rel="accessibility-reporting" href="/.well-known/accessibility-reporting">
+```
+
+The `statement` field in the discovery document ([§4.1](#41-top-level-fields)) provides a machine-readable pointer to the same accessibility statement that `rel="accessibility-statement"` advertises in HTML, giving automated reporters a single place to find both the reporting endpoint and the operator's compliance context.
 
 ---
 
