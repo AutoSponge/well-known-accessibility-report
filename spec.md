@@ -1,8 +1,11 @@
 # Well-Known URI for Accessibility Issue Reporting
 
 **Status:** Draft — seeking feedback
+
 **URI Suffix:** `accessibility-reporting`
+
 **Well-Known URI:** `/.well-known/accessibility-reporting`
+
 **Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1
 
 ---
