@@ -1,0 +1,38 @@
+<style>
+  /* add jump links for headings */
+  .anchor {
+    float: left;
+    margin-left: -1.2em;
+    padding-right: 0.2em;
+    opacity: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  :is(h1, h2, h3, h4, h5, h6):hover .anchor {
+    opacity: 0.5;
+  }
+  .anchor:hover {
+    opacity: 1 !important;
+  }
+
+  /* fix links */
+  a {
+    text-decoration: underline;
+    font-weight: normal;
+  }
+
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').forEach(function (heading) {
+      var a = document.createElement('a');
+      a.className = 'anchor';
+      a.href = '#' + heading.id;
+      a.setAttribute('aria-label', 'Permalink to "' + heading.textContent.trim() + '"');
+      a.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M7.775 3.275a.75.75 0 0 0 1.06 1.06l1.25-1.25a2 2 0 1 1 2.83 2.83l-2.5 2.5a2 2 0 0 1-2.83 0 .75.75 0 0 0-1.06 1.06 3.5 3.5 0 0 0 4.95 0l2.5-2.5a3.5 3.5 0 0 0-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 1 2.83 0 .75.75 0 0 0 1.06-1.06 3.5 3.5 0 0 0-4.95 0l-2.5 2.5a3.5 3.5 0 0 0 4.95 4.95l1.25-1.25a.75.75 0 0 0-1.06-1.06l-1.25 1.25a2 2 0 0 1-2.83 0z"/></svg>';
+      heading.style.position = 'relative';
+      heading.insertBefore(a, heading.firstChild);
+    });
+  });
+</script>

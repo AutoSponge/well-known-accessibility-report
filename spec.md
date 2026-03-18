@@ -12,13 +12,6 @@ permalink: /spec
 
 ---
 
-<style>
-  a {
-    text-decoration: underline;
-    font-weight: normal;
-  }
-</style>
-
 ## Abstract
 
 This document defines a well-known URI (`/.well-known/accessibility-reporting`) where websites and web applications advertise how to report accessibility issues. It specifies a JSON discovery document, an HTTP reporting API, and a report payload schema. Humans, assistive technologies, browser agents, and AI-augmented browsing tools can all use the mechanism. Site operators control what they accept.
