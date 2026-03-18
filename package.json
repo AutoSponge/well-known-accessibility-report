@@ -2,7 +2,8 @@
   "name": "well-known-accessibility",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "serve": "bundle exec jekyll serve --livereload"
   },
   "devDependencies": {
     "ajv": "^8.17.1"

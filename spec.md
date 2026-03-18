@@ -1,3 +1,9 @@
+---
+layout: default
+title: Well-Known URI for Accessibility Issue Reporting
+permalink: /spec
+---
+
 # Well-Known URI for Accessibility Issue Reporting
 
 **Status:** Draft — seeking feedback
@@ -81,6 +87,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.5.](#95-browser-native-tool-registration-informative) Browser-Native Tool Registration (Informative)
   - [9.6.](#96-accessibility-tree-snapshot-tools) Accessibility Tree Snapshot Tools
   - [9.7.](#97-scope-beyond-wcag) Scope Beyond WCAG
+  - [9.8.](#98-multi-subdomain-deployments) Multi-Subdomain Deployments
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -241,6 +248,8 @@ For example, `shop.example.com` might serve a discovery document whose endpoint 
 ```
 
 When the endpoint is on a different origin, the endpoint server MUST serve appropriate CORS headers (see [§7.5](#75-cross-origin-requests)) to allow cross-origin submissions from browser-based reporters. Reporters MUST NOT reject an endpoint solely because it differs from the discovery document's origin.
+
+Operators running multiple subdomains under a common identity may use this pattern to consolidate reporting. See [§9.8](#98-multi-subdomain-deployments) for subdomain deployment strategies.
 
 ### 4.3 The `reporting.accepts` Object
 
@@ -1376,6 +1385,26 @@ This specification intentionally does not limit reports to WCAG success criteria
 - Issues not yet addressed by any published standard
 
 Reporters SHOULD describe the barrier they experienced, regardless of whether they can identify an applicable WCAG criterion. When the issue maps to a rule from a third-party vocabulary (e.g., an axe-core best-practice rule), reporters can use the `rules` field ([§6.3.2](#632-the-rules-array)) to reference it, and operators can declare support for that vocabulary via `ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)).
+
+### 9.8 Multi-Subdomain Deployments
+
+Well-known URIs are scoped to the origin (scheme + host + port, per RFC 6454). There is no inheritance between a subdomain and its parent domain: `https://www.example.com/.well-known/accessibility-reporting` and `https://api.example.com/.well-known/accessibility-reporting` are independent resources. Operators with multiple subdomains must explicitly handle discovery at each origin.
+
+#### Shared-operator subdomains
+
+When multiple subdomains belong to the same organization and should route reports to a single destination, operators have two options:
+
+1. **HTTP redirect.** Each subdomain issues a `301` (permanent) or `302` (temporary) redirect from `/.well-known/accessibility-reporting` to the canonical domain's discovery document. Reporters MUST follow HTTP redirects when resolving the well-known URI and SHOULD follow no more than 5 redirects in a single resolution chain. This is the RECOMMENDED approach because it requires no duplication of configuration.
+
+2. **Shared endpoint.** Each subdomain serves its own discovery document, but all documents declare the same `reporting.endpoint` value. Configuration is centralized at the endpoint level. See [§4.2.1](#421-cross-origin-endpoints) for cross-origin endpoint requirements.
+
+Both approaches are valid and may be combined (e.g., secondary subdomains redirect to the primary, which declares a cross-origin endpoint).
+
+#### Multi-tenant subdomains
+
+Platforms that assign a subdomain to each tenant (e.g., `customer1.platform.com`, `customer2.platform.com`) SHOULD serve a per-tenant discovery document at each subdomain's well-known URI. A shared discovery document would cause reports to be routed to the wrong entity, defeating the purpose of per-tenant reporting. The `contact` object ([§4.4](#44-the-contact-object)) in each document SHOULD identify the specific tenant, not the platform operator, unless the platform operator is the responsible party for accessibility remediation.
+
+Platforms that cannot serve per-tenant well-known resources SHOULD consider whether link-based discovery ([§3.4](#34-link-based-discovery)) via per-page `<link>` headers is a more appropriate deployment model for their architecture.
 
 ---
 
