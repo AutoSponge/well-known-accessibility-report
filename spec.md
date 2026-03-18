@@ -4,14 +4,10 @@ title: Well-Known URI for Accessibility Issue Reporting
 permalink: /spec
 ---
 
-# Well-Known URI for Accessibility Issue Reporting
-
-**Status:** Draft — seeking feedback
-
-**URI Suffix:** `accessibility-reporting`
-
-**Well-Known URI:** `/.well-known/accessibility-reporting`
-
+# Well-Known URI for Accessibility Issue Reporting <br>
+**Status:** Draft — seeking feedback <br>
+**URI Suffix:** `accessibility-reporting` <br>
+**Well-Known URI:** `/.well-known/accessibility-reporting` <br>
 **Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1
 
 ---
