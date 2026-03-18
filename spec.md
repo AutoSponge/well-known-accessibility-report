@@ -158,6 +158,29 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHOULD", "RECOMMENDED", 
 
 ## 3. The Well-Known Resource
 
+The protocol consists of two steps: discovery and submission. A reporter first fetches the discovery document to learn whether reporting is supported and where to send reports, then submits a report to the declared endpoint.
+
+Figure 1: ASCII diagram of successful flow.<br>
+<a href="#skipfigure-1">Skip ASCII image</a>
+```
+Reporter                              Operator
+   |                                     |
+   |  GET /.well-known/accessibility-reporting
+   |------------------------------------>|
+   |                                     |
+   |  200 OK (discovery document)        |
+   |<------------------------------------|
+   |                                     |
+   |  POST <endpoint> (Report Object)    |
+   |------------------------------------>|
+   |                                     |
+   |  201 Created (Report Receipt)       |
+   |<------------------------------------|
+```
+<a name="skipfigure-1"></a> 
+
+A 404 response to the GET indicates no support. See [§5.1.2](#512-error-responses) for non-2xx responses to POST.
+
 ### 3.1 Location
 
 A site supporting this specification MUST serve a discovery document at:
