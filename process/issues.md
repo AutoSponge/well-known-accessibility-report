@@ -133,3 +133,7 @@
 - **No custom media type registration.** The spec uses `application/json` for both discovery document and reports. A dedicated type like `application/accessibility-report+json` is not needed for v1.0. Can be revisited in a future version if content negotiation becomes a requirement.
 
 - **WAI-Adapt: Discoverable Destinations relationship documented.** Added §9.9 (informative) clarifying that `rel="accessibility-statement"` (WAI-Adapt) and `/.well-known/accessibility-reporting` (this spec) are complementary, not conflicting: the former links to an existing human-readable statement; the latter is a submission API. Added WAI-Adapt to the **Related** header. The `statement` discovery document field already bridges the two.
+
+## Once accepted
+
+- suggest inclusion in https://www.w3.org/TR/maturity-model/
