@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * validate.mjs — Validates all JSON blocks in spec.md.
+ * validate.mjs — Validates all JSON blocks in spec.md and readme.md.
  *
  * For each ```json block:
  *   - schema-def  : contains "$schema" (Appendix D–J schemas) — syntax-check only
@@ -14,6 +14,7 @@
  * avoid false positives from tel: URIs and namespace IRIs ending in "#".
  *
  * Run: node scripts/validate.mjs
+ * Extra files: node scripts/validate.mjs path/to/other.md
  */
 
 import { readFileSync } from 'node:fs';
@@ -22,6 +23,12 @@ import path from 'node:path';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SPEC_PATH = path.join(ROOT, 'spec.md');
+
+// Files validated by default (schemas are always sourced from spec.md)
+const DEFAULT_PATHS = [
+  path.join(ROOT, 'spec.md'),
+  path.join(ROOT, 'readme.md'),
+];
 
 // ── 1. Extract ```json blocks from the markdown ──────────────────────────────
 
@@ -102,7 +109,7 @@ function detectSchemaType(block) {
   if (all.includes('appendix a')) return 'discovery';
   if (all.includes('appendix b')) return 'report';
 
-  // Content-based detection (fallback)
+  // Content-based detection (fallback — used for readme.md and other external files)
   if (c.includes('"data":') && c.includes('"version": "1.0"')
       && !c.includes('"reporting":') && !c.includes('"contact":')) {
     return 'report';
@@ -131,30 +138,9 @@ function detectSchemaType(block) {
   return null; // no schema determinable — syntax-only check
 }
 
-// ── 4. Main ───────────────────────────────────────────────────────────────────
+// ── 4. Compile schemas from spec.md blocks ────────────────────────────────────
 
-async function main() {
-  const spec = readFileSync(SPEC_PATH, 'utf8');
-  const blocks = extractBlocks(spec);
-
-  // Try to load AJV (requires `npm install`)
-  let ajv = null;
-  try {
-    const { default: Ajv } = await import('ajv/dist/2020.js');
-    // strict:false  — allows $ref alongside sibling keywords (used in Appendix E)
-    // logger.warn   — silences "unknown format ignored" noise; formats are intentionally
-    //                 not validated to avoid false positives with tel: URIs and # IRIs
-    ajv = new Ajv({
-      allErrors: true,
-      strict: false,
-      logger: { log: console.log, warn: () => {}, error: console.error },
-    });
-  } catch {
-    /* AJV unavailable — schema validation will be skipped */
-  }
-
-  // ── Extract and compile the inline schemas (Appendix D–J) ──────────────────
-
+function compileSchemas(specBlocks, ajv) {
   const TITLE_TO_TYPE = {
     'Accessibility Reporting Discovery Document': 'discovery',
     'Accessibility Issue Report': 'report',
@@ -167,7 +153,7 @@ async function main() {
 
   const validators = {}; // schemaType → compiled AJV validator
 
-  for (const block of blocks) {
+  for (const block of specBlocks) {
     if (classify(block) !== 'schema-def') continue;
     let schema;
     try {
@@ -185,12 +171,16 @@ async function main() {
     }
   }
 
-  // ── Validate all blocks ────────────────────────────────────────────────────
+  return validators;
+}
 
+// ── 5. Validate all blocks in a single file ───────────────────────────────────
+
+function validateFile(label, blocks, validators, ajv) {
   let passed = 0, skipped = 0, syntaxErrors = 0, schemaErrors = 0;
   const SEP = '─'.repeat(60);
 
-  console.log(`\nValidating JSON in spec.md\n${SEP}`);
+  console.log(`\n${label}\n${SEP}`);
 
   for (const block of blocks) {
     const kind = classify(block);
@@ -285,21 +275,78 @@ async function main() {
     }
   }
 
-  // ── Summary ────────────────────────────────────────────────────────────────
   const total = blocks.filter(b => classify(b) !== 'empty').length;
+  console.log(`${SEP}`);
+  console.log(`  Blocks: ${total}  |  ✓ ${passed} passed  |  · ${skipped} skipped  |  ✗ ${syntaxErrors + schemaErrors} errors`);
+
+  return { passed, skipped, syntaxErrors, schemaErrors };
+}
+
+// ── 6. Main ───────────────────────────────────────────────────────────────────
+
+async function main() {
+  // Extra markdown files can be appended as CLI args
+  const extraPaths = process.argv.slice(2).map(f => path.resolve(f));
+  const filePaths = [
+    ...DEFAULT_PATHS,
+    ...extraPaths.filter(f => !DEFAULT_PATHS.includes(f)),
+  ];
+
+  // Try to load AJV (requires `npm install`)
+  let ajv = null;
+  try {
+    const { default: Ajv } = await import('ajv/dist/2020.js');
+    // strict:false  — allows $ref alongside sibling keywords (used in Appendix E)
+    // logger.warn   — silences "unknown format ignored" noise; formats are intentionally
+    //                 not validated to avoid false positives with tel: URIs and # IRIs
+    ajv = new Ajv({
+      allErrors: true,
+      strict: false,
+      logger: { log: console.log, warn: () => {}, error: console.error },
+    });
+  } catch {
+    /* AJV unavailable — schema validation will be skipped */
+  }
+
+  // Compile validators from the inline schemas in spec.md (Appendices D–J)
+  const specBlocks = extractBlocks(readFileSync(SPEC_PATH, 'utf8'));
+  const validators = compileSchemas(specBlocks, ajv);
+
+  // Validate each file
+  const SEP = '═'.repeat(60);
+  console.log(`\nValidating JSON blocks\n${SEP}`);
+
+  let totalPassed = 0, totalSkipped = 0, totalErrors = 0;
+
+  for (const filePath of filePaths) {
+    let markdown;
+    try {
+      markdown = readFileSync(filePath, 'utf8');
+    } catch (e) {
+      console.error(`\n⚠  Could not read ${filePath}: ${e.message}`);
+      totalErrors++;
+      continue;
+    }
+    const blocks = extractBlocks(markdown);
+    const label = path.relative(ROOT, filePath);
+    const result = validateFile(label, blocks, validators, ajv);
+    totalPassed  += result.passed;
+    totalSkipped += result.skipped;
+    totalErrors  += result.syntaxErrors + result.schemaErrors;
+  }
+
+  // Grand total
   console.log(`\n${SEP}`);
-  console.log(`Blocks: ${total}  |  ✓ ${passed} passed  |  · ${skipped} skipped  |  ✗ ${syntaxErrors + schemaErrors} errors`);
+  console.log(`Total: ✓ ${totalPassed} passed  |  · ${totalSkipped} skipped  |  ✗ ${totalErrors} errors`);
 
   if (!ajv) {
     console.log('\n⚠  AJV not installed — schema validation skipped. Run `npm install` to enable it.');
   }
 
-  if (syntaxErrors + schemaErrors === 0) {
+  if (totalErrors === 0) {
     console.log('\n✅  All JSON is valid!\n');
   } else {
-    if (syntaxErrors > 0) console.log(`\n❌  ${syntaxErrors} syntax error(s)`);
-    if (schemaErrors > 0) console.log(`❌  ${schemaErrors} schema validation error(s)`);
-    console.log();
+    console.log(`\n❌  ${totalErrors} error(s) found\n`);
     process.exit(1);
   }
 }

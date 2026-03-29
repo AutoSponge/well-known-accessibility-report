@@ -26,10 +26,12 @@ https://example.com/.well-known/accessibility-reporting
 │  {                                                           │
 │    "version": "1.0",                                         │
 │    "reporting": {                                            │
-│      "endpoints": [{ "url": "/a11y-report" }],               │
+│      "endpoint": "https://example.com/a11y-report",          │
 │      "accepts": {                                            │
-│        "ruleVocabularies": ["wcag2", "act"],                 │
-│        "domSnapshot": true                                   │
+│        "ruleVocabularies": [                                 │
+│          { "name": "WCAG 2.1", "prefix": "wcag2",            │
+│            "namespace": "https://www.w3.org/TR/WCAG21/#" }   │
+│        ]                                                     │
 │      }                                                       │
 │    }                                                         │
 │  }                                                           │
@@ -86,7 +88,7 @@ sequenceDiagram
     User->>Extension: Adds description, submits
 
     Extension->>Site: POST /a11y-report
-    Note right of Site: {<br/>  "reporter": { "type": "human" },<br/>  "issue": {<br/>    "url": "https://example.com/checkout",<br/>    "description": "Payment button has no label",<br/>    "element": { "role": "button", "name": "" }<br/>  }<br/>}
+    Note right of Site: {<br/>  "version": "1.0",<br/>  "reporter": { "type": "human" },<br/>  "data": {<br/>    "page": "https://example.com/checkout",<br/>    "description": "Payment button has no label",<br/>    "element": { "snapshot": { "role": "button", "name": "" } }<br/>  }<br/>}
 
     Site-->>Extension: 201 Created { "id": "rpt-8821" }
     Extension-->>User: "Report submitted (rpt-8821)"
@@ -119,7 +121,7 @@ sequenceDiagram
     User-->>Agent: Approved
 
     Agent->>Site: POST /a11y-report
-    Note right of Site: {<br/>  "reporter": { "type": "human-assisted" },<br/>  "issue": {<br/>    "url": "https://example.com/checkout",<br/>    "element": {<br/>      "role": "button", "name": "",<br/>      "distinguishedSubtree": [...]<br/>    },<br/>    "rules": [<br/>      { "@type": "earl:TestRequirement",<br/>        "@id": "wcag2:4.1.2" },<br/>      { "@type": "earl:TestCase",<br/>        "@id": "act:97a4e1" }<br/>    ]<br/>  },<br/>  "attachments": [<br/>    { "type": "domSnapshot",<br/>      "mimeType": "application/json" }<br/>  ]<br/>}
+    Note right of Site: {<br/>  "version": "1.0",<br/>  "reporter": { "type": "human-assisted" },<br/>  "data": {<br/>    "page": "https://example.com/checkout",<br/>    "element": {<br/>      "snapshot": { "role": "button", "name": "" }<br/>    },<br/>    "rules": [<br/>      { "@type": "earl:TestRequirement", "@id": "wcag2:4.1.2" },<br/>      { "@type": "earl:TestCase", "@id": "act:97a4e1" }<br/>    ],<br/>    "attachments": [<br/>      { "type": "domSnapshot", "mimeType": "application/json",<br/>        "url": "https://example.com/snapshots/s1.json" }<br/>    ]<br/>  }<br/>}
 
     Site-->>Agent: 201 Created { "id": "rpt-8822" }
     Agent-->>User: "Report rpt-8822 submitted"
@@ -135,17 +137,17 @@ For fully **automated** scanners there is no user step — the agent fetches, co
 {
   "version": "1.0",
   "reporting": {
-    "endpoints": [
-      { "url": "https://example.com/a11y-report" }
-    ],
+    "endpoint": "https://example.com/a11y-report",
     "accepts": {
       "ruleVocabularies": [
-        { "id": "wcag2",    "uri": "https://www.w3.org/TR/WCAG21/" },
-        { "id": "act",      "uri": "https://act-rules.github.io/rules/" },
-        { "id": "axe-core", "uri": "https://dequeuniversity.com/rules/axe/" }
+        { "name": "WCAG 2.1", "prefix": "wcag2",    "namespace": "https://www.w3.org/TR/WCAG21/#" },
+        { "name": "ACT Rules", "prefix": "act",      "namespace": "https://www.w3.org/WAI/standards-guidelines/act/rules/" },
+        { "name": "axe-core",  "prefix": "axe-core", "namespace": "https://dequeuniversity.com/rules/axe/" }
       ],
-      "domSnapshot":  true,
-      "screenshot":   true
+      "attachments": [
+        { "type": "domSnapshot" },
+        { "type": "screenshot" }
+      ]
     }
   },
   "contact": {
@@ -158,16 +160,17 @@ For fully **automated** scanners there is no user step — the agent fetches, co
 
 ```json
 {
-  "@context": { "wcag2": "https://www.w3.org/TR/WCAG21/#" },
+  "@context": { "wcag2": "https://www.w3.org/TR/WCAG21/#", "earl": "http://www.w3.org/ns/earl#" },
   "version": "1.0",
   "reporter": { "type": "human" },
-  "issue": {
-    "url": "https://example.com/checkout",
+  "data": {
+    "page": "https://example.com/checkout",
     "description": "The payment button has no accessible name. My screen reader reads nothing when focus lands on it.",
     "element": {
-      "role": "button",
-      "name": "",
-      "xpath": "/html/body/main/form/button[2]"
+      "snapshot": { "role": "button", "name": "" },
+      "locators": [
+        { "type": "xpath", "value": "/html/body/main/form/button[2]" }
+      ]
     },
     "rules": [
       { "@type": "earl:TestRequirement", "@id": "wcag2:4.1.2" }
