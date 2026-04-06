@@ -8,7 +8,7 @@ permalink: /spec
 **Status:** Draft — seeking feedback <br>
 **URI Suffix:** `accessibility-reporting` <br>
 **Well-Known URI:** `/.well-known/accessibility-reporting` <br>
-**Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations
+**Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations, W3C Reporting API (reporting-1)
 
 ---
 
@@ -85,6 +85,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.7.](#97-scope-beyond-wcag) Scope Beyond WCAG
   - [9.8.](#98-multi-subdomain-deployments) Multi-Subdomain Deployments
   - [9.9.](#99-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
+  - [9.10.](#910-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1442,6 +1443,28 @@ Operators supporting both specifications SHOULD include both `<link>` elements i
 ```
 
 The `statement` field in the discovery document ([§4.1](#41-top-level-fields)) provides a machine-readable pointer to the same accessibility statement that `rel="accessibility-statement"` advertises in HTML, giving automated reporters a single place to find both the reporting endpoint and the operator's compliance context.
+
+### 9.10 W3C Reporting API (reporting-1)
+
+*This section is informative. It explains how the W3C Reporting API relates to this specification and why the two are not interchangeable.*
+
+The [W3C Reporting API](https://www.w3.org/TR/reporting-1/) (reporting-1) defines a generic infrastructure for web browsers to deliver diagnostic reports — such as Content Security Policy violations, network errors, and certificate warnings — to operator-controlled endpoints. Operators configure reporting by returning a `Reporting-Endpoints` HTTP response header that names one or more collector URLs. The browser then queues, batches, and POSTs these reports automatically, with no user involvement.
+
+Despite surface similarities (both involve POST to a declared endpoint), the two specifications differ in scope, direction, and purpose:
+
+| Dimension | W3C Reporting API | This specification |
+|-----------|-------------------|--------------------|
+| **Who generates the report** | The browser (user agent) | A human, assistive technology, automated scanner, or AI agent |
+| **What is being reported** | Browser-detected events (policy violations, network errors, deprecations) | Accessibility barriers experienced during use |
+| **Report direction** | Browser → operator's backend | External party → operator |
+| **How endpoints are declared** | `Reporting-Endpoints` HTTP response header | `/.well-known/accessibility-reporting` discovery document |
+| **Subject domain** | Security, performance, browser internals | Accessibility of the site's user interface |
+| **Delivery guarantee** | Explicitly best-effort; reports may be dropped | Reporters expect standard HTTP POST semantics |
+| **Reporter identity** | The browser/UA; no separate reporter concept | Reporters may be anonymous or identified |
+
+The W3C Reporting API is designed for the operator to monitor their own site's technical behaviour. This specification is designed for third parties to report problems *to* the operator. A site may deploy both without conflict.
+
+There is no technical integration between the two specifications. Operators implementing the W3C Reporting API to collect CSP reports are not required to, and SHOULD NOT, route those reports through the endpoint defined by this specification — the schemas, purposes, and audiences are different.
 
 ---
 
