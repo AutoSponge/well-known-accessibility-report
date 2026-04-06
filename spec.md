@@ -1458,7 +1458,7 @@ Despite surface similarities (both involve POST to a declared endpoint), the two
 | **What is being reported** | Browser-detected events (policy violations, network errors, deprecations) | Accessibility barriers experienced during use |
 | **Report direction** | Browser → operator's backend | External party → operator |
 | **How endpoints are declared** | `Reporting-Endpoints` HTTP response header | `/.well-known/accessibility-reporting` discovery document |
-| **Subject domain** | Security, performance, browser internals | Accessibility of the site's user interface |
+| **Subject domain** | Security, performance, browser internals | Accessibility of the site's user interface or semantic content |
 | **Delivery guarantee** | Explicitly best-effort; reports may be dropped | Reporters expect standard HTTP POST semantics |
 | **Reporter identity** | The browser/UA; no separate reporter concept | Reporters may be anonymous or identified |
 
