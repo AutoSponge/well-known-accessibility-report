@@ -8,7 +8,7 @@ permalink: /spec
 **Status:** Draft — seeking feedback <br>
 **URI Suffix:** `accessibility-reporting` <br>
 **Well-Known URI:** `/.well-known/accessibility-reporting` <br>
-**Related:** RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations, W3C Reporting API (reporting-1)
+**Related:** RFC 8288, RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations, W3C Reporting API (reporting-1)
 
 ---
 
@@ -77,15 +77,16 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
     - [8.4.3.](#843-submission-behavior) Submission Behavior
 - [9.](#9-relationship-to-existing-specifications) Relationship to Existing Specifications
   - [9.1.](#91-rfc-9116-securitytxt) RFC 9116 (security.txt)
-  - [9.2.](#92-wcag-em-20) WCAG-EM 2.0
-  - [9.3.](#93-earl-10) EARL 1.0
-  - [9.4.](#94-act-rules-format-11) ACT Rules Format 1.1
-  - [9.5.](#95-browser-native-tool-registration-informative) Browser-Native Tool Registration (Informative)
-  - [9.6.](#96-accessibility-tree-snapshot-tools) Accessibility Tree Snapshot Tools
-  - [9.7.](#97-scope-beyond-wcag) Scope Beyond WCAG
-  - [9.8.](#98-multi-subdomain-deployments) Multi-Subdomain Deployments
-  - [9.9.](#99-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
-  - [9.10.](#910-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
+  - [9.2.](#92-rfc-8288-web-linking) RFC 8288 (Web Linking)
+  - [9.3.](#93-wcag-em-20) WCAG-EM 2.0
+  - [9.4.](#94-earl-10) EARL 1.0
+  - [9.5.](#95-act-rules-format-11) ACT Rules Format 1.1
+  - [9.6.](#96-browser-native-tool-registration-informative) Browser-Native Tool Registration (Informative)
+  - [9.7.](#97-accessibility-tree-snapshot-tools) Accessibility Tree Snapshot Tools
+  - [9.8.](#98-scope-beyond-wcag) Scope Beyond WCAG
+  - [9.9.](#99-multi-subdomain-deployments) Multi-Subdomain Deployments
+  - [9.10.](#910-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
+  - [9.11.](#911-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -127,8 +128,8 @@ This specification follows the `security.txt` (RFC 9116) model for vulnerability
 - An AI agent browsing a site on behalf of a user notices that a button is missing an accessible name in the accessibility tree. The agent drafts a report; the user reviews and approves it before submission.
 - An automated accessibility scanner runs a nightly audit and submits each EARL-formatted finding as an individual POST to the site's reporting endpoint, respecting any declared rate limits.
 - A human user encounters a form that their screen reader cannot complete. They submit a report through the site's own reporting form, which uses this endpoint under the hood.
-- A site implements WebMCP (see [§9.5](#95-browser-native-tool-registration-informative)), registering an accessibility reporting tool in the browser context. A user's AI agent discovers this tool alongside other site-provided tools during normal interaction. When the user encounters difficulty (for example, being unable to locate or operate a control), the agent surfaces a "report accessibility issue" option. The user reviews and approves the report, which the agent submits via the WebMCP-registered tool. The tool routes the report to the site's well-known endpoint with the user's session context intact. The reporter type is `"human-assisted"`.
-- An autonomous agent uses a headless browser with accessibility tree snapshot support (see [§9.6](#96-accessibility-tree-snapshot-tools)) to inspect a page programmatically. The snapshot returns a structured representation of the accessibility tree with stable element references. The agent detects that a custom widget has the ARIA `role="button"` but exposes no accessible name through any naming technique. Without human involvement, the agent fetches the discovery document, constructs a report including the relevant portion of the accessibility tree as a `domSnapshot` attachment, and submits it via POST. The reporter type is `"automated"`.
+- A site implements WebMCP (see [§9.6](#96-browser-native-tool-registration-informative)), registering an accessibility reporting tool in the browser context. A user's AI agent discovers this tool alongside other site-provided tools during normal interaction. When the user encounters difficulty (for example, being unable to locate or operate a control), the agent surfaces a "report accessibility issue" option. The user reviews and approves the report, which the agent submits via the WebMCP-registered tool. The tool routes the report to the site's well-known endpoint with the user's session context intact. The reporter type is `"human-assisted"`.
+- An autonomous agent uses a headless browser with accessibility tree snapshot support (see [§9.7](#97-accessibility-tree-snapshot-tools)) to inspect a page programmatically. The snapshot returns a structured representation of the accessibility tree with stable element references. The agent detects that a custom widget has the ARIA `role="button"` but exposes no accessible name through any naming technique. Without human involvement, the agent fetches the discovery document, constructs a report including the relevant portion of the accessibility tree as a `domSnapshot` attachment, and submits it via POST. The reporter type is `"automated"`.
 - A QA engineer uses Chrome DevTools Recorder to capture the steps that trigger an accessibility barrier: navigating to a checkout page, tabbing through the form, and failing to activate a button via keyboard. The engineer exports the recording as a JSON file and attaches it to their report as an `"other"` attachment. The operator's accessibility team replays the recording in a sandboxed browser to reproduce the issue, identifies the root cause, applies a fix, and replays the recording again to verify the barrier is resolved.
 
 ---
@@ -270,7 +271,7 @@ For example, `shop.example.com` might serve a discovery document whose endpoint 
 
 When the endpoint is on a different origin, the endpoint server MUST serve appropriate CORS headers (see [§7.5](#75-cross-origin-requests)) to allow cross-origin submissions from browser-based reporters. Reporters MUST NOT reject an endpoint solely because it differs from the discovery document's origin.
 
-Operators running multiple subdomains under a common identity may use this pattern to consolidate reporting. See [§9.8](#98-multi-subdomain-deployments) for subdomain deployment strategies.
+Operators running multiple subdomains under a common identity may use this pattern to consolidate reporting. See [§9.9](#99-multi-subdomain-deployments) for subdomain deployment strategies.
 
 ### 4.3 The `reporting.accepts` Object
 
@@ -368,7 +369,7 @@ Each element in the `attachments` array declares an attachment type the operator
 
 The following `domSnapshot` format values are defined by this specification:
 
-- `"accessibility-tree"`: A JSON representation of the page's accessibility tree, structured as a hierarchy of accessible objects with roles, names, states, and relationships. The exact schema is implementation-defined; common implementations follow browser accessibility APIs such as the Chrome DevTools Protocol AXNode structure (see [§9.6](#96-accessibility-tree-snapshot-tools)).
+- `"accessibility-tree"`: A JSON representation of the page's accessibility tree, structured as a hierarchy of accessible objects with roles, names, states, and relationships. The exact schema is implementation-defined; common implementations follow browser accessibility APIs such as the Chrome DevTools Protocol AXNode structure (see [§9.7](#97-accessibility-tree-snapshot-tools)).
 - `"dom-fragment"`: A serialized HTML fragment containing the relevant portion of the DOM, typically rooted at or near the affected element. Transmitted as a string via the `data` field (base64-encoded) with `mimeType` set to `"text/html"`.
 
 Operators and reporters MAY use additional format values beyond those defined here. Operators that include a format string in their `domSnapshot` attachment declaration accept attachments using that format.
@@ -1349,11 +1350,15 @@ Native HTML elements carry built-in semantics, keyboard behavior, and platform a
 
 Like `security.txt`, this specification uses a well-known location where operators declare a reporting channel without changing their site. Unlike `security.txt`, it uses structured JSON for discovery and defines an HTTP API for automated submission.
 
-### 9.2 WCAG-EM 2.0
+### 9.2 RFC 8288 (Web Linking)
+
+RFC 8288 defines link relations and the HTTP `Link` header. This specification registers the `accessibility-reporting` link relation ([§3.4](#34-link-based-discovery)) so that operators can advertise the discovery document via HTTP headers or HTML `<link>` elements without relying solely on the well-known URI.
+
+### 9.3 WCAG-EM 2.0
 
 WCAG-EM (W3C Website Accessibility Conformance Evaluation Methodology) defines a process for evaluating full websites. The report format in this specification is not an evaluation report; it is an issue report for a specific observed problem. WCAG-EM outputs may be summarized or referenced in reports submitted under this specification.
 
-### 9.3 EARL 1.0
+### 9.4 EARL 1.0
 
 The Evaluation and Report Language (EARL) is a W3C vocabulary for describing test results. This specification adopts EARL's JSON-LD conventions for typed references in the `rules` field of Issue Objects ([§6.3.2](#632-the-rules-array)):
 
@@ -1364,7 +1369,7 @@ This alignment means that `rules` entries are valid JSON-LD that EARL-aware proc
 
 Reporters that produce complete EARL Assertion output (e.g., automated scanners) MAY include it as an attachment ([§6.3.3](#633-earl-assertions-as-attachments)) for operators with EARL processing capabilities.
 
-### 9.4 ACT Rules Format 1.1
+### 9.5 ACT Rules Format 1.1
 
 The Accessibility Conformance Testing (ACT) Rules Format 1.1 defines machine-readable accessibility test rules and a JSON-LD structure for reporting test results. This specification aligns with the ACT Rules Format in two ways:
 
@@ -1372,7 +1377,7 @@ The Accessibility Conformance Testing (ACT) Rules Format 1.1 defines machine-rea
 
 2. **EARL type hierarchy.** The `@type` values used in this specification — `earl:TestRequirement` for requirements and `earl:TestCase` for concrete rules — follow the EARL vocabulary hierarchy as used in ACT Rules Format 1.1 examples.
 
-### 9.5 Browser-Native Tool Registration (Informative)
+### 9.6 Browser-Native Tool Registration (Informative)
 
 *This section is informative. It describes a complementary discovery pattern that may become available as browser-native tool registration APIs emerge.*
 
@@ -1384,7 +1389,7 @@ Browser-native tool registration fits human-in-the-loop reporting workflows well
 
 Implementors exposing a reporting tool via a browser-native tool registration API SHOULD ensure that the tool routes to the same endpoint declared in the well-known discovery document, so that reporters using either discovery mechanism reach the same destination.
 
-### 9.6 Accessibility Tree Snapshot Tools
+### 9.7 Accessibility Tree Snapshot Tools
 
 Headless browser tools designed for AI agents can expose the browser's accessibility tree as a structured snapshot. Unlike raw HTML or screenshots, accessibility tree snapshots present a page's semantic structure (roles, accessible names, states, and relationships) through stable element references that agents can act on reliably.
 
@@ -1396,7 +1401,7 @@ These snapshots support accessibility reporting in two ways:
 
 Operators declaring `domSnapshot` support in `reporting.accepts.attachments` ([§4.3.2](#432-the-attachments-array)) SHOULD be prepared to receive accessibility tree snapshots, not only serialized HTML DOM content. The `formats` field on a `domSnapshot` attachment declaration (e.g., `["accessibility-tree", "dom-fragment"]`) allows operators to specify which representations they accept.
 
-### 9.7 Scope Beyond WCAG
+### 9.8 Scope Beyond WCAG
 
 This specification intentionally does not limit reports to WCAG success criteria. Accessibility barriers can be caused by:
 
@@ -1407,7 +1412,7 @@ This specification intentionally does not limit reports to WCAG success criteria
 
 Reporters SHOULD describe the barrier they experienced, regardless of whether they can identify an applicable WCAG criterion. When the issue maps to a rule from a third-party vocabulary (e.g., an axe-core best-practice rule), reporters can use the `rules` field ([§6.3.2](#632-the-rules-array)) to reference it, and operators can declare support for that vocabulary via `ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)).
 
-### 9.8 Multi-Subdomain Deployments
+### 9.9 Multi-Subdomain Deployments
 
 Well-known URIs are scoped to the origin (scheme + host + port, per RFC 6454). There is no inheritance between a subdomain and its parent domain: `https://www.example.com/.well-known/accessibility-reporting` and `https://api.example.com/.well-known/accessibility-reporting` are independent resources. Operators with multiple subdomains must explicitly handle discovery at each origin.
 
@@ -1427,7 +1432,7 @@ Platforms that assign a subdomain to each tenant (e.g., `customer1.platform.com`
 
 Platforms that cannot serve per-tenant well-known resources SHOULD consider whether link-based discovery ([§3.4](#34-link-based-discovery)) via per-page `<link>` headers is a more appropriate deployment model for their architecture.
 
-### 9.9 WAI-Adapt: Discoverable Destinations (Informative)
+### 9.10 WAI-Adapt: Discoverable Destinations (Informative)
 
 *This section is informative. It describes a complementary W3C specification that overlaps in conceptual territory.*
 
@@ -1444,7 +1449,7 @@ Operators supporting both specifications SHOULD include both `<link>` elements i
 
 The `statement` field in the discovery document ([§4.1](#41-top-level-fields)) provides a machine-readable pointer to the same accessibility statement that `rel="accessibility-statement"` advertises in HTML, giving automated reporters a single place to find both the reporting endpoint and the operator's compliance context.
 
-### 9.10 W3C Reporting API (reporting-1)
+### 9.11 W3C Reporting API (reporting-1)
 
 *This section is informative. It explains how the W3C Reporting API relates to this specification and why the two are not interchangeable.*
 
