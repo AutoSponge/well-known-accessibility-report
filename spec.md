@@ -8,7 +8,7 @@ permalink: /spec
 **Status:** Draft — seeking feedback <br>
 **URI Suffix:** `accessibility-reporting` <br>
 **Well-Known URI:** `/.well-known/accessibility-reporting` <br>
-**Related:** RFC 8288, RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations, W3C Reporting API (reporting-1)
+**Related:** RFC 8288, RFC 8615, RFC 9110, RFC 9116, WCAG-EM 2.0, EARL 1.0, ACT Rules Format 1.1, WAI-Adapt: Discoverable Destinations, W3C Reporting API (reporting-1), COGA: Making Content Usable
 
 ---
 
@@ -87,6 +87,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.9.](#99-multi-subdomain-deployments) Multi-Subdomain Deployments
   - [9.10.](#910-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
   - [9.11.](#911-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
+  - [9.12.](#912-cognitive-accessibility-coga-making-content-usable-informative) Cognitive Accessibility: COGA Making Content Usable (Informative)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1470,6 +1471,19 @@ Despite surface similarities (both involve POST to a declared endpoint), the two
 The W3C Reporting API is designed for the operator to monitor their own site's technical behaviour. This specification is designed for third parties to report problems *to* the operator. A site may deploy both without conflict.
 
 There is no technical integration between the two specifications. Operators implementing the W3C Reporting API to collect CSP reports are not required to, and SHOULD NOT, route those reports through the endpoint defined by this specification — the schemas, purposes, and audiences are different.
+
+### 9.12 Cognitive Accessibility: COGA Making Content Usable (Informative)
+
+*This section is informative. It describes how this specification aligns with the W3C Note on cognitive accessibility.*
+
+[Making Content Usable for People with Cognitive and Learning Disabilities](https://www.w3.org/TR/coga-usable/) (COGA) is a W3C Working Group Note that defines eight design objectives with associated patterns for supporting users with cognitive and learning disabilities. This specification directly supports **Objective 7: Provide Help and Support**, particularly:
+
+- **Pattern 7.5 (Findable Support):** The well-known URI and link-based discovery ([§3.4](#34-link-based-discovery)) provide a standardized, predictable location for accessibility help — findable by users, assistive technologies, and agents without requiring the user to search the site.
+- **Pattern 7.1 (Human Help):** The `contact` object ([§4.4](#44-the-contact-object)) exposes direct channels to a human accessibility team (email, phone, TTY, relay), and the contact-only discovery mode ([§4.1](#41-top-level-fields)) supports operators that provide human help without an HTTP endpoint.
+
+Beyond Objective 7, this specification creates a **feedback loop** that helps operators learn when they are failing other COGA objectives — unclear language, cognitive overload, missing error recovery — through reports filed by users who experience those barriers. Because the report schema is not limited to WCAG success criteria ([§9.8](#98-scope-beyond-wcag)), reporters can describe any barrier in the free-text `description` field, including those that correspond to COGA design patterns.
+
+No standardized rule vocabulary for COGA patterns currently exists. If one were published, operators could declare it in `ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)) and reporters could reference individual COGA patterns in the `rules` array ([§6.3.2](#632-the-rules-array)) using the same JSON-LD mechanism used for WCAG, ACT, and other vocabularies. The extensible vocabulary architecture requires no changes to this specification to support COGA rules when they become available.
 
 ---
 
