@@ -88,6 +88,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.10.](#910-wai-adapt-discoverable-destinations-informative) WAI-Adapt: Discoverable Destinations (Informative)
   - [9.11.](#911-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
   - [9.12.](#912-cognitive-accessibility-coga-making-content-usable-informative) Cognitive Accessibility: COGA Making Content Usable (Informative)
+  - [9.13.](#913-prior-art-jaws-connect-informative) Prior Art: JAWS Connect (Informative)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1484,6 +1485,27 @@ There is no technical integration between the two specifications. Operators impl
 Beyond Objective 7, this specification creates a **feedback loop** that helps operators learn when they are failing other COGA objectives — unclear language, cognitive overload, missing error recovery — through reports filed by users who experience those barriers. Because the report schema is not limited to WCAG success criteria ([§9.8](#98-scope-beyond-wcag)), reporters can describe any barrier in the free-text `description` field, including those that correspond to COGA design patterns.
 
 No standardized rule vocabulary for COGA patterns currently exists. If one were published, operators could declare it in `ruleVocabularies` ([§4.3.1](#431-the-rulevocabularies-array)) and reporters could reference individual COGA patterns in the `rules` array ([§6.3.2](#632-the-rules-array)) using the same JSON-LD mechanism used for WCAG, ACT, and other vocabularies. The extensible vocabulary architecture requires no changes to this specification to support COGA rules when they become available.
+
+### 9.13 Prior Art: JAWS Connect (Informative)
+
+*This section is informative. It describes an existing proprietary implementation that addresses the same problem space as this specification.*
+
+[JAWS Connect](https://www.tpgi.com/arc-platform/jaws-connect/) is a feature of TPGi's ARC Platform, developed in collaboration with Freedom Scientific (both Vispero brands), that enables JAWS screen reader users to submit accessibility feedback directly to website operators. Announced in late 2021, it is the earliest known production implementation of in-context accessibility issue reporting from an assistive technology client to a site operator's dashboard.
+
+**How it works:** When a JAWS user (version 2021+) visits a participating site and opens the links list (Insert+F7), a "Provide feedback on the page using JAWS Connect" link appears at the top. Activating the link opens a TPGi-hosted feedback form that captures structured data: the task the user was attempting, what happened versus what was expected, whether the task was completed, an accessibility rating, and optional contact information. Submitted feedback appears in the operator's ARC Platform dashboard under a "Usability Feedback" tab.
+
+**Key design differences from this specification:**
+
+| Dimension | JAWS Connect | This specification |
+|-----------|-------------|--------------------|
+| **Discovery** | TPGi maintains a proprietary registry of participating domains; JAWS checks this registry client-side | Open well-known URI and link relation; any client can discover the endpoint |
+| **Client support** | Requires JAWS (a commercial screen reader) | Any HTTP client: assistive technologies, browsers, automated scanners, AI agents |
+| **Server support** | Requires an ARC Platform subscription from TPGi | Any HTTP server; no vendor dependency |
+| **Report destination** | TPGi-hosted form and dashboard | Operator-controlled endpoint |
+| **Report format** | Proprietary structured form fields | JSON-LD with typed rule references and extensible attachments |
+| **Operator setup** | Contact TPGi to activate; no code changes | Serve a JSON discovery document at the well-known URI |
+
+JAWS Connect validates the core premise of this specification — that assistive technology users encounter barriers that never reach the site operator, and that an in-context reporting channel between the user and the operator is valuable. This specification generalizes that concept into an open, vendor-neutral protocol that any client and any server can implement independently.
 
 ---
 
