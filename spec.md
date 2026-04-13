@@ -1066,7 +1066,7 @@ Reporters without knowledge of any applicable rule SHOULD omit the `rules` field
 
 #### 6.3.3 EARL Assertions as Attachments
 
-Reporters that produce complete EARL Assertion output (e.g., automated scanners with EARL toolchains) MAY include it as an attachment ([§6.4](#64-attachments)) with `type` set to `"other"` and the appropriate `mimeType`:
+Reporters that produce complete EARL Assertion output (e.g., automated reporters with EARL toolchains) MAY include it as an attachment ([§6.4](#64-attachments)) with `type` set to `"other"` and the appropriate `mimeType`:
 
 - JSON-LD EARL: `"application/ld+json"`
 - Turtle: `"text/turtle"`
@@ -1193,7 +1193,7 @@ Recordings are executable content. See [§11.4](#114-executable-attachments) for
 }
 ```
 
-**Example — automated scan report using axe-core best-practice rules:**
+**Example — automated report using axe-core best-practice rules:**
 
 ```json
 {
@@ -1370,7 +1370,7 @@ The Evaluation and Report Language (EARL) is a W3C vocabulary for describing tes
 
 This alignment means that `rules` entries are valid JSON-LD that EARL-aware processors can interpret directly. Reporters without EARL tooling need only construct simple `@type`/`@id` objects.
 
-Reporters that produce complete EARL Assertion output (e.g., automated scanners) MAY include it as an attachment ([§6.3.3](#633-earl-assertions-as-attachments)) for operators with EARL processing capabilities.
+Reporters that produce complete EARL Assertion output (e.g., automated reporters) MAY include it as an attachment ([§6.3.3](#633-earl-assertions-as-attachments)) for operators with EARL processing capabilities.
 
 ### 9.5 ACT Rules Format 1.1
 
@@ -1462,7 +1462,7 @@ Despite surface similarities (both involve POST to a declared endpoint), the two
 
 | Dimension | W3C Reporting API | This specification |
 |-----------|-------------------|--------------------|
-| **Who generates the report** | The browser (user agent) | A human, assistive technology, automated scanner, or AI agent |
+| **Who generates the report** | The browser (user agent) | A human, assistive technology, automated reporter, or AI agent |
 | **What is being reported** | Browser-detected events (policy violations, network errors, deprecations) | Accessibility barriers experienced during use |
 | **Report direction** | Browser → operator's backend | External party → operator |
 | **How endpoints are declared** | `Reporting-Endpoints` HTTP response header | `/.well-known/accessibility-reporting` discovery document |
@@ -1500,7 +1500,7 @@ No standardized rule vocabulary for COGA patterns currently exists. If one were 
 | Dimension | JAWS Connect | This specification |
 |-----------|-------------|--------------------|
 | **Discovery** | TPGi maintains a proprietary registry of participating domains; JAWS checks this registry client-side | Open well-known URI and link relation; any client can discover the endpoint |
-| **Client support** | Requires JAWS (a commercial screen reader) | Any HTTP client: assistive technologies, browsers, automated scanners, AI agents |
+| **Client support** | Requires JAWS (a commercial screen reader) | Any HTTP client: assistive technologies, browsers, automated reporters, AI agents |
 | **Server support** | Requires an ARC Platform subscription from TPGi | Any HTTP server; no vendor dependency |
 | **Report destination** | TPGi-hosted form and dashboard | Operator-controlled endpoint |
 | **Report format** | Proprietary structured form fields | JSON-LD with typed rule references and extensible attachments |

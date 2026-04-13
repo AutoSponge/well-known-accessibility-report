@@ -2,6 +2,25 @@
 title: Well-Known URI for Accessibility Issue Reporting
 ---
 
+Table of Contents
+
+- [Well-Known URI for Accessibility Issue Reporting](#well-known-uri-for-accessibility-issue-reporting)
+  - [The Core Idea](#the-core-idea)
+  - [Two-Step Protocol](#two-step-protocol)
+  - [Use Case: Human Reporter](#use-case-human-reporter)
+  - [Use Case: AI Agent](#use-case-ai-agent)
+  - [What a Discovery Document Looks Like](#what-a-discovery-document-looks-like)
+  - [What a Minimal Report Looks Like](#what-a-minimal-report-looks-like)
+  - [Who Is This For?](#who-is-this-for)
+    - [User Journeys](#user-journeys)
+      - [Lane 1: Human Reporter (Browser Extension)](#lane-1-human-reporter-browser-extension)
+      - [Lane 2: AI (Accessibility) Agent](#lane-2-ai-accessibility-agent)
+      - [Lane 3: Assistive Technology User (Screen Reader)](#lane-3-assistive-technology-user-screen-reader)
+    - [Operators: Regulatory Alignment Matrix](#operators-regulatory-alignment-matrix)
+  - [Design Principles](#design-principles)
+
+---
+
 # Well-Known URI for Accessibility Issue Reporting
 
 A proposed standard that lets websites advertise a **machine-readable accessibility issue reporting endpoint** — so users, assistive technologies, browser extensions, and AI agents can all send structured reports directly to site operators.
@@ -127,7 +146,7 @@ sequenceDiagram
     Agent-->>User: "Report rpt-8822 submitted"
 ```
 
-For fully **automated** scanners there is no user step — the agent fetches, constructs, and submits without human involvement, with `"type": "automated"`.
+For fully **automated** agents there is no user step — the agent fetches, constructs, and submits without human involvement, with `"type": "automated"`.
 
 ---
 
@@ -189,8 +208,69 @@ For fully **automated** scanners there is no user step — the agent fetches, co
 | **Assistive technology vendors** | Add "Report issue to this site" to AT menus |
 | **Browser extension authors** | Surface a reporting UI when a site declares support |
 | **AI agent developers** | Let agents flag accessibility barriers they detect while browsing |
-| **Automated scanner authors** | POST findings per-issue rather than sending PDF reports by email |
+| **Automated reporter authors** | POST findings per-issue as structured reports instead of emailing PDFs |
 | **Standard bodies** | A common substrate that WCAG-EM, EARL, ACT, and WAI-Adapt results can all target |
+
+### User Journeys
+
+#### Lane 1: Human Reporter (Browser Extension)
+
+A person using a browser extension encounters an accessibility barrier, and the extension auto-discovers where to send a structured report — no prior arrangement needed.
+
+```mermaid
+flowchart LR
+    A[Encounters accessibility<br/>barrier on website] --> B[Browser extension detects<br/>discovery endpoint]
+    B --> C[Extension fetches<br/>discovery doc and<br/>page context]
+    C --> D[User sees prefilled<br/>report with<br/>WCAG criteria]
+    D --> E[POSTs structured JSON<br/>report to endpoint]
+    E --> F[Receives receipt ID<br/>and status URL]
+    F --> G{More issues<br/>found?}
+    G -- Yes --> A
+    G -- No --> H[Done]
+```
+
+#### Lane 2: AI (Accessibility) Agent
+
+An AI agent crawls websites on behalf of a user, discovers a site's reporting endpoint, and automatically submits a structured violation report with full evidence.
+
+```mermaid
+flowchart LR
+    A[AI agent begins<br/>scheduled crawl<br/>of target URL] --> B[GET discovery document<br/>from well-known URI]
+    B --> C[Analyzes accessibility<br/>tree and runs<br/>WCAG / ACT rules]
+    C --> D[Composes report with<br/>rule references<br/>and evidence]
+    D --> E[POSTs report to<br/>reporting endpoint]
+    E --> F{More pages<br/>to crawl?}
+    F -- Yes --> B
+    F -- No --> G[Logs results with<br/>receipts to audit file]
+```
+
+#### Lane 3: Assistive Technology User (Screen Reader)
+
+A screen reader user hits a barrier during live usage. Their assistive technology offers to report the issue, captures context automatically, and submits it in-site.
+
+```mermaid
+flowchart LR
+    A[Discovers barrier:<br/>missing label, focus<br/>trap, or broken region] --> B[AT offers<br/>'Report this issue']
+    B --> C[Captures accessibility<br/>tree snapshot<br/>and context]
+    C --> D[Human describes<br/>issue for report]
+    D --> E[Submits report with<br/>AT type, barrier<br/>details, and snapshot]
+    E --> F["User hears:<br/>'Report submitted (ID: xxx)'"]
+```
+
+### Operators: Regulatory Alignment Matrix
+
+How each spec feature maps to regulatory requirements across jurisdictions.
+
+| Spec Feature                          | EAA Art. 13                          | EAA Art. 29                | ADA Title II                          | ADA Title III                      | Section 508                   | EN 301 549                      |
+|---------------------------------------|--------------------------------------|----------------------------|---------------------------------------|------------------------------------|-------------------------------|---------------------------------|
+| Discovery endpoint                    | Enables structured reporting channel | Enables enforcement intake | Structured grievance intake            | Facilitates barrier documentation  | Supports conformance feedback | Aligns with feedback mechanisms |
+| Reporting API (POST)                  | Structured issue submission          | Formal complaint mechanism | Formal grievance submission            | Documentation of barriers          | Issue documentation           | Feedback submission             |
+| Status tracking (GET)                 | Response time accountability         | Enforcement follow-up      | Grievance follow-up                    | Complaint tracking                 | Remediation tracking          | Follow-up mechanism             |
+| Contact info                          | Required contact disclosure          | Enforcement contact        | ADA coordinator (required for 50+ ee) | Voluntary contact point            | Section 508 coordinator       | Contact point                   |
+| statement (URL)                       | Art. 13(2) / Annex V requirement     | Referenced in enforcement  | Self-evaluation / transition plan      | Voluntary                          | Required (ACR)                | Accessibility statement         |
+| enforcementProcedure                  | N/A                                  | Art. 29 compliance         | Required grievance procedure           | DOJ complaint process              | Agency complaint process      | Enforcement procedure           |
+| responseTime                          | Reasonable response required         | Enforcement timeline       | Reasonable timeframe expected          | No defined timeline                | Timely resolution             | Response deadline               |
+| Report amend (PUT) / retract (DELETE) | Updated complaint handling           | Complaint modification     | Grievance modification                 | Complaint updates                  | Issue amendments              | Feedback updates                |
 
 ---
 
