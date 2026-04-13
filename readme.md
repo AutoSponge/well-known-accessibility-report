@@ -224,9 +224,7 @@ flowchart LR
     C --> D[User sees prefilled<br/>report with<br/>WCAG criteria]
     D --> E[POSTs structured JSON<br/>report to endpoint]
     E --> F[Receives receipt ID<br/>and status URL]
-    F --> G{More issues<br/>found?}
-    G -- Yes --> A
-    G -- No --> H[Done]
+    F --> [Done]
 ```
 
 #### Lane 2: AI (Accessibility) Agent
@@ -235,13 +233,11 @@ An AI agent crawls websites on behalf of a user, discovers a site's reporting en
 
 ```mermaid
 flowchart LR
-    A[AI agent begins<br/>scheduled crawl<br/>of target URL] --> B[GET discovery document<br/>from well-known URI]
+    A[AI agent begins<br/>crawl of target<br/>URL] --> B[GET discovery document<br/>from well-known URI]
     B --> C[Analyzes accessibility<br/>tree and runs<br/>WCAG / ACT rules]
     C --> D[Composes report with<br/>rule references<br/>and evidence]
     D --> E[POSTs report to<br/>reporting endpoint]
-    E --> F{More pages<br/>to crawl?}
-    F -- Yes --> B
-    F -- No --> G[Logs results with<br/>receipts to audit file]
+    E --> G[Logs results with<br/>receipts to audit file]
 ```
 
 #### Lane 3: Assistive Technology User (Screen Reader)
