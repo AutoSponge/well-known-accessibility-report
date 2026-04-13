@@ -89,6 +89,7 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.11.](#911-w3c-reporting-api-reporting-1) W3C Reporting API (reporting-1)
   - [9.12.](#912-cognitive-accessibility-coga-making-content-usable-informative) Cognitive Accessibility: COGA Making Content Usable (Informative)
   - [9.13.](#913-prior-art-jaws-connect-informative) Prior Art: JAWS Connect (Informative)
+  - [9.14.](#914-schemaorg-structured-data-informative) Schema.org Structured Data (Informative)
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1506,6 +1507,31 @@ No standardized rule vocabulary for COGA patterns currently exists. If one were 
 | **Operator setup** | Contact TPGi to activate; no code changes | Serve a JSON discovery document at the well-known URI |
 
 JAWS Connect validates the core premise of this specification — that assistive technology users encounter barriers that never reach the site operator, and that an in-context reporting channel between the user and the operator is valuable. This specification generalizes that concept into an open, vendor-neutral protocol that any client and any server can implement independently.
+
+### 9.14 Schema.org Structured Data (Informative)
+
+*This section is informative. It describes how operators can use schema.org structured data to increase the visibility of their accessibility reporting channel.*
+
+Operators MAY embed schema.org structured data in their HTML pages to advertise the availability of an accessibility reporting endpoint. For example, a `schema.org/ContactPoint` with `contactType` set to `"accessibility"` and a `url` pointing to the discovery document can be included in a site's `Organization` or `WebSite` markup:
+
+```html
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Example Corp",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "accessibility",
+    "url": "https://example.com/.well-known/accessibility-reporting"
+  }
+}
+</script>
+```
+
+This gives search engines and structured-data consumers a machine-readable signal that the site accepts accessibility reports, potentially surfacing this information in search results alongside other contact channels.
+
+Structured data is a **complementary** discovery mechanism, not a replacement. The normative discovery paths remain the well-known URI ([§3.1](#31-location)) and the `accessibility-reporting` link relation ([§3.4](#34-link-based-discovery)). Schema.org markup does not carry the discovery document's content (accepted formats, rate limits, authentication requirements), so reporters that encounter a structured data reference SHOULD still fetch the discovery document before submitting a report.
 
 ---
 
