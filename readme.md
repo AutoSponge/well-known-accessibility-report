@@ -224,7 +224,6 @@ flowchart LR
     C --> D[User sees prefilled<br/>report with<br/>WCAG criteria]
     D --> E[POSTs structured JSON<br/>report to endpoint]
     E --> F[Receives receipt ID<br/>and status URL]
-    F --> G[Done]
 ```
 
 #### Lane 2: AI (Accessibility) Agent
