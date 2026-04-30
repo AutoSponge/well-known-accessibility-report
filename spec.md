@@ -90,6 +90,10 @@ This document defines a well-known URI (`/.well-known/accessibility-reporting`) 
   - [9.12.](#912-cognitive-accessibility-coga-making-content-usable-informative) Cognitive Accessibility: COGA Making Content Usable (Informative)
   - [9.13.](#913-prior-art-jaws-connect-informative) Prior Art: JAWS Connect (Informative)
   - [9.14.](#914-schemaorg-structured-data-informative) Schema.org Structured Data (Informative)
+  - [9.15.](#915-open-graph-protocol-accessibility-metadata-informative) Open Graph Protocol: Accessibility Metadata (Informative)
+    - [9.15.1.](#9151-the-ogimagealt-gap) The `og:image:alt` Gap
+    - [9.15.2.](#9152-worked-example-agent-detects-missing-ogimagealt) Worked Example: Agent Detects Missing `og:image:alt`
+    - [9.15.3.](#9153-worked-example-agent-detects-a-broken-link) Worked Example: Agent Detects a Broken Link
 - [10.](#10-privacy-considerations) Privacy Considerations
 - [11.](#11-security-considerations) Security Considerations
   - [11.1.](#111-transport-security) Transport Security
@@ -1532,6 +1536,140 @@ Operators MAY embed schema.org structured data in their HTML pages to advertise 
 This gives search engines and structured-data consumers a machine-readable signal that the site accepts accessibility reports, potentially surfacing this information in search results alongside other contact channels.
 
 Structured data is a **complementary** discovery mechanism, not a replacement. The normative discovery paths remain the well-known URI ([§3.1](#31-location)) and the `accessibility-reporting` link relation ([§3.4](#34-link-based-discovery)). Schema.org markup does not carry the discovery document's content (accepted formats, rate limits, authentication requirements), so reporters that encounter a structured data reference SHOULD still fetch the discovery document before submitting a report.
+
+### 9.15 Open Graph Protocol: Accessibility Metadata (Informative)
+
+*This section is informative. It describes how the Open Graph protocol can surface accessibility reporting channels in page metadata and enable agent-assisted issue detection and reporting.*
+
+The [Open Graph protocol](https://ogp.me) (OGP) defines `<meta property="og:...">` tags that social platforms and link previewers use to extract structured page representations — title, image, description — when a URL is shared. OGP is based on RDFa and supports custom namespace prefixes via the `prefix` attribute on `<head>`, allowing publishers to extend OG metadata without modifying the core vocabulary.
+
+Operators MAY advertise their accessibility reporting endpoint in page-level OG metadata using a custom namespace prefix:
+
+```html
+<head prefix="og: http://ogp.me/ns#
+              accessibility: https://www.w3.org/ns/accessibility#">
+  <meta property="og:title" content="Product Catalog">
+  <meta property="og:image" content="https://example.com/hero.jpg">
+  <meta property="og:image:alt" content="A person browsing products on a laptop">
+  <meta property="accessibility:reporting"
+        content="https://example.com/.well-known/accessibility-reporting">
+</head>
+```
+
+The `accessibility:reporting` property value is the URL of the well-known discovery document ([§3.1](#31-location)). This value SHOULD be identical to the `href` of any `<link rel="accessibility-reporting">` element ([§3.4](#34-link-based-discovery)) on the same page; the two mechanisms address different audiences — link-based discovery targets HTTP clients, OG metadata targets social crawlers and agents reading the full DOM.
+
+This discovery pattern is especially useful in two contexts:
+
+1. **In-app browsers.** Social platforms such as X open shared links in a captured WebView rather than the user's default browser. The app already parses the page's OG metadata to render the link card — making `accessibility:reporting` a zero-cost discovery path. An accessibility agent running within that WebView context can find the reporting endpoint from the same metadata payload the platform already read, without issuing a separate request to `/.well-known/accessibility-reporting`.
+
+2. **Social link previewers.** When a URL is pasted into a messaging or social platform, the previewer fetches and parses OG metadata on the server side. A previewer aware of `accessibility:reporting` could surface a "Report accessibility issue" action alongside the share card, routing users directly to the operator's channel.
+
+#### 9.15.1 The `og:image:alt` Gap
+
+The Open Graph protocol defines `og:image:alt` as the alternative text for the `og:image` used in social share previews. This property is supported by major platforms but frequently omitted in practice, causing social previews to present images without accessible descriptions to screen reader users who access shared links.
+
+An agent browsing a page that includes `og:image` without a corresponding `og:image:alt` has detected a concrete accessibility barrier. If the page also declares `a11y:reporting`, the agent has all it needs to file a targeted report: the issue type (missing image alternative text on an OG image), the affected resource (the image URL), and the reporting endpoint.
+
+#### 9.15.2 Worked Example: Agent Detects Missing `og:image:alt`
+
+The following scenario illustrates how an AI agent combines OG metadata discovery, GET-based duplicate checking, and POST-based reporting. The agent is operating within the X in-app browser: a user in the X app tapped a shared link, which opened in X's captured WebView.
+
+**Step 1 — Page analysis.** The page loads inside the X WebView. The agent reads the `<head>` and finds:
+
+```html
+<meta property="og:image" content="https://example.com/images/hero-banner.jpg">
+<!-- og:image:alt is absent -->
+<meta property="accessibility:reporting"
+      content="https://example.com/.well-known/accessibility-reporting">
+```
+
+X's OG parser already read this metadata to render the link card before the WebView opened — the `accessibility:reporting` endpoint is available to the agent at no additional cost. The agent notes: `og:image` is present but `og:image:alt` is missing. This maps to WCAG 2.2 SC 1.1.1 (Non-text Content).
+
+**Step 2 — Duplicate check via GET.** Before filing a report, the agent issues an authenticated GET to the reporting endpoint to check whether this issue has already been reported for this page:
+
+```http
+GET https://example.com/.well-known/accessibility-reporting/reports
+Authorization: Bearer <agent-token>
+```
+
+The server returns a Report Status Object array ([§5.2.2](#522-authenticated-get)). The agent scans the results for entries where `page` matches the article URL and `summary` references missing image alt text. It finds an existing report with `"status": "in-progress"` filed three days earlier. The agent concludes the issue is already known and actively being addressed; it does not file a duplicate.
+
+**Step 3 — Report (alternate path: no matching report found).** If the GET had returned no matching report, the agent would `POST https://example.com/.well-known/accessibility-reporting/reports`, including the X WebView's user agent so the operator knows the browsing context in which the issue was observed:
+
+```json
+{
+  "@context": {
+    "earl": "http://www.w3.org/ns/earl#",
+    "WCAG22": "https://www.w3.org/TR/WCAG22/#"
+  },
+  "version": "1.0",
+  "page": "https://example.com/blog/article-42",
+  "timestamp": "2025-09-15T11:22:00Z",
+  "reporter": {
+    "type": "human-assisted",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21E236 Twitter/10.35"
+  },
+  "data": {
+    "description": "og:image is present but og:image:alt is absent. Screen reader users accessing social share previews of this page will not receive an alternative description for the hero image.",
+    "impact": "major",
+    "rules": [
+      {
+        "@type": "earl:TestRequirement",
+        "@id": "WCAG22:non-text-content"
+      }
+    ],
+    "element": {
+      "label": "og:image meta tag in <head>",
+      "locators": [
+        { "type": "css", "value": "meta[property='og:image']" }
+      ]
+    }
+  }
+}
+```
+
+The server returns `201 Created` with a receipt containing a report ID and `"status": "received"`. The `"human-assisted"` reporter type signals that a real user opened this page — the report was not generated by an autonomous background crawl.
+
+#### 9.15.3 Worked Example: Agent Detects a Broken Link
+
+Broken links are navigation barriers for all users and implicate WCAG 2.2 SC 2.4.4 (Link Purpose) and SC 3.3.2 (Labels or Instructions) when the broken destination is a referenced resource that users are instructed to visit. The following scenario continues the in-app browser context: a user shared a link to `https://example.com/help/faq` on X; another user tapped it and the page opened in X's captured WebView.
+
+**Step 1 — Link navigation.** Within the WebView, the user taps a link labeled "Download accessibility guide (PDF)". The target URL returns HTTP `404 Not Found`. The agent observing the session intercepts the failed navigation.
+
+**Step 2 — Endpoint discovery.** The agent reads the `<head>` of the referring page (already loaded in the WebView) and finds:
+
+```html
+<meta property="accessibility:reporting"
+      content="https://example.com/.well-known/accessibility-reporting">
+```
+
+**Step 3 — Report submission.** The 404 is an objective, unambiguous HTTP failure observed live in the user's session. The agent `POST`s to `https://example.com/.well-known/accessibility-reporting/reports` immediately, without a prior duplicate check:
+
+```json
+{
+  "version": "1.0",
+  "page": "https://example.com/help/faq",
+  "timestamp": "2025-09-15T11:45:00Z",
+  "reporter": {
+    "type": "human-assisted",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21E236 Twitter/10.35"
+  },
+  "data": {
+    "description": "The link labeled 'Download accessibility guide (PDF)' resolves to HTTP 404 (Not Found). Destination URL: https://example.com/docs/accessibility-guide.pdf",
+    "impact": "major",
+    "element": {
+      "label": "Download accessibility guide (PDF) link",
+      "locators": [
+        { "type": "css",   "value": "a[href='/docs/accessibility-guide.pdf']" },
+        { "type": "xpath", "value": "//a[normalize-space()='Download accessibility guide (PDF)']" }
+      ]
+    },
+    "steps": "Open https://example.com/help/faq in the X in-app browser. Tap the link labeled 'Download accessibility guide (PDF)'. Observe HTTP 404 response."
+  }
+}
+```
+
+Neither example requires the agent to have pre-configured the reporting endpoint. In both cases the agent discovers it from the page's own OG metadata already parsed by the X app — the same metadata that rendered the link card before the WebView opened also advertises where to report accessibility issues.
 
 ---
 
